@@ -10,15 +10,15 @@ The subject introduces students to digital image processing and image analysis.
 |  1   | Python Basics - datatypes, flow (if-else, for, while), functions, classes | --- |
 |  2   | Continuation (Python Basics) - libraries, visualization | |
 |  3   | Histogram, histogram equalization, histogram matching | |
-|  4   | Continuation | |
+|  4   | Continuation of ↑ | |
 |  5   | High Dynamic Range (HDR) |  |
-|  6   | Continuation |  |
+|  6   | Continuation of ↑ |  |
 |  7   | Segmentation |  |
-|  8   | Continuation |  |
+|  8   | Continuation of ↑ |  |
 |  9   | Image restoration |  |
-|  10  | Continuation |  |
+|  10  | Continuation of ↑ |  |
 |  11  | Kinect - depth map, background suppression |  |
-|  12  | Continuation |  |
+|  12  | Continuation of ↑ |  |
 |  13  | Excursion to CIIRC |  |
 |  14  | Consultation |  |
 
