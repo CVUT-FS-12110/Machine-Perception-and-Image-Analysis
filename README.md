@@ -1,27 +1,40 @@
-# mpip
+# Machine Perception and Image Processing
 
-Machine Perception and Image Processing
-
-
+The subject introduces students to digital image processing and image analysis. 
 
 
+## Lab schedule
 
-## Lectures
+| Week | Topic        | Presetation  |
+|:----:|:-------------|:-------------|
+|  1   | Python Basics - datatypes, flow (if-else, for, while), functions, classes | --- |
+|  2   | Continuation (Python Basics) - libraries, visualization | |
+|  3   | Histogram, histogram equalization, histogram matching | |
+|  4   | Continuation | |
+|  5   | High Dynamic Range (HDR) |  |
+|  6   | Continuation |  |
+|  7   | Segmentation |  |
+|  8   | Continuation |  |
+|  9   | Image restoration |  |
+|  10  | Continuation |  |
+|  11  | Kinect - depth map, background suppression |  |
+|  12  | Continuation |  |
+|  13  | Excursion to CIIRC |  |
+|  14  | Consultation |  |
 
-| Week | Topic           | Presetation  |
-|:----:|:-------------|:-----|
-|  1   | Python Basics - datatypes, flow (if-else, for, while), functions, classes  | --- |
-|  2   | Continuation (Python Basics) - libraries, visualization | a6dsfsdaf |
-|  3   | right-aligned | $1600 |
-|  4   | right-aligned | $1600 |
-|  5   | right-aligned | $1600 |
-|  6   | right-aligned | $1600 |
-|  7   | right-aligned | $1600 |
-|  8   | right-aligned | $1600 |
-|  9   | right-aligned | $1600 |
-|  10  |
-|  11  |
-|  12  |
-|  13  |
-|  14  |
+
+
+
+## Authors
+
+* **Václav Hlaváč** - *Main architect, lectures, labs* - [---]()
+* **Cyril Oswald** - *Initial work, labs* - [redeemer-zz](https://github.com/redeemer-zz)
+* **Adam Peichl** - *Initial work, labs* - [LockeErasmus](https://github.com/LockeErasmus)
+
+
+
+
+
+
+
 
