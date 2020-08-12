@@ -1,7 +1,6 @@
-# Machine Perception and Image Processing
+# Machine Perception and Image Processing (Labs)
 
-The subject introduces students to digital image processing and image analysis. 
-
+The subject introduces students to digital image processing and machine perception. 
 
 ## Lab schedule
 
@@ -21,7 +20,6 @@ The subject introduces students to digital image processing and image analysis.
 |  12  | Continuation |  |
 |  13  | Excursion to CIIRC |  |
 |  14  | Consultation |  |
-
 
 
 
