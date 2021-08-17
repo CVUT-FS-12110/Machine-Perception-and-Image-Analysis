@@ -1,6 +1,6 @@
 # Machine Perception and Image Processing (Labs)
 
-The subject introduces students to digital image processing and machine perception. 
+The subject introduces students to digital image processing and machine perception and algorithms.
 
 ## Lab schedule
 
