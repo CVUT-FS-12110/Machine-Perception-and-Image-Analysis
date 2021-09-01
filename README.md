@@ -16,7 +16,7 @@ The subject introduces students to digital image processing and machine percepti
 |  8   | Continuation |  |
 |  9   | Image restoration |  |
 |  10  | Continuation |  |
-|  11  | Kinect - depth map, background suppression |  |
+|  11  | 3D vision and deep maps |  |
 |  12  | Continuation |  |
 |  13  | Excursion to CIIRC |  |
 |  14  | Consultation |  |
