@@ -4,27 +4,29 @@ The subject introduces students to digital image processing and machine percepti
 
 ## Lab schedule
 
-| Week | Topic        | Presetation  |
-|:----:|:-------------|:-------------|
-|  1   | Python Basics - datatypes, flow (if-else, for, while), functions, classes | --- |
-|  2   | Continuation (Python Basics) - libraries, visualization | |
-|  3   | Histogram, histogram equalization, histogram matching | |
-|  4   | Continuation | |
-|  5   | High Dynamic Range (HDR) |  |
-|  6   | Continuation |  |
-|  7   | Segmentation |  |
-|  8   | Continuation |  |
-|  9   | Image restoration |  |
-|  10  | Continuation |  |
-|  11  | 3D vision and deep maps |  |
-|  12  | Continuation |  |
-|  13  | Excursion to CIIRC |  |
-|  14  | Consultation |  |
+This course assumes basic knowledge of [the python programming language](src%2Flectures%2F00-Python-Introduction%2FPython-Introduction.ipynb).
+
+| Week | Topic                                                 | Presetation  |
+|:----:|:------------------------------------------------------|:-------------|
+|  1   | Introduction to OpenCV in Python                      |  |
+|  2   | Histogram, histogram equalization, histogram matching | [histograms.ipynb](src%2Flectures%2F02_histograms%2Fhistograms.ipynb)|
+|  3   | Continuation                                          | |
+|  4   | High Dynamic Range (HDR)                              | [HDR.ipynb](src%2Flectures%2F04_HDR%2FHDR.ipynb) |
+|  5   | Continuation                                          |  |
+|  6   | Segmentation                                          | [segmentation.ipynb](src%2Flectures%2F06_segmentation%2Fsegmentation.ipynb) |
+|  7   | Continuation                                          |  |
+|  8   | Image restoration                                     | [Image Restoration.ipynb](src%2Flectures%2F08_image_restoration%2FImage%20Restoration.ipynb) |
+|  9   | Continuation                                          | [FourierTransformation.ipynb](src%2Flectures%2F08_image_restoration%2FFourierTransformation.ipynb) |
+|  10  | 3D vision and deep maps                               |  |
+|  11  | Continuation                                          |  |
+|  12  | YOLO                                                  |  |
+|  13  | Continuation                                          |  |
+|  14  | Consultation                                          |  |
 
 
 ## Setting up your environment
 
-Python 3.7.9 was used for developing all the jupyter notebooks, however, every python > 3.5 should be fine.
+Python 3.9 was used for developing all the jupyter notebooks, however, every python > 3.8 should be fine.
 
 ### Windows
 
