@@ -8,7 +8,7 @@ This course assumes basic knowledge of [the python programming language](src%2Fl
 
 | Week | Topic                                                 | Presetation  |
 |:----:|:------------------------------------------------------|:-------------|
-|  1   | Introduction to OpenCV in Python                      |  |
+|  1   | Introduction to OpenCV in Python                      | [OpenCV.ipynb](src%2Flectures%2F01_openCV%2FOpenCV.ipynb) |
 |  2   | Histogram, histogram equalization, histogram matching | [histograms.ipynb](src%2Flectures%2F02_histograms%2Fhistograms.ipynb)|
 |  3   | Continuation                                          | |
 |  4   | High Dynamic Range (HDR)                              | [HDR.ipynb](src%2Flectures%2F04_HDR%2FHDR.ipynb) |
