@@ -1,3 +1,7 @@
-matplotlib==3.4.2
-numpy==1.22.0
-opencv-python==4.5.2.54
+matplotlib
+numpy
+opencv-python
+exif
+scipy
+scikit-learn
+scikit-image
