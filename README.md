@@ -17,9 +17,9 @@ This course assumes basic knowledge of [the python programming language](src%2Fl
 |  7   | Continuation                                          |  |
 |  8   | Image restoration                                     | [Image Restoration.ipynb](src%2Flectures%2F08_image_restoration%2FImage%20Restoration.ipynb) |
 |  9   | Continuation                                          | [FourierTransformation.ipynb](src%2Flectures%2F08_image_restoration%2FFourierTransformation.ipynb) |
-|  10  | 3D vision and deep maps                               |  |
+|  10  | Morphological operations                              | [Morphological Operations](src%2Flectures%2F07_morphological_operations%2Fmorphological_operations.ipynb)  |
 |  11  | Continuation                                          |  |
-|  12  | YOLO                                                  |  |
+|  12  | 3D vision and deep maps                                                  |  |
 |  13  | Continuation                                          |  |
 |  14  | Consultation                                          |  |
 
