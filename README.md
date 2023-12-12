@@ -19,7 +19,7 @@ This course assumes basic knowledge of [the python programming language](src%2Fl
 |  9   | Continuation                                          | [FourierTransformation.ipynb](src%2Flectures%2F08_image_restoration%2FFourierTransformation.ipynb) |
 |  10  | Morphological operations                              | [Morphological Operations](src%2Flectures%2F07_morphological_operations%2Fmorphological_operations.ipynb)  |
 |  11  | Continuation                                          |  |
-|  12  | 3D vision and deep maps                                                  |  |
+|  12  | 3D vision and deep maps                               | point cloud - [processing](src%2Flectures%2F09_point_cloud%2Fpoint_cloud_processing.ipynb) [clustering](src%2Flectures%2F09_point_cloud%2Fpoint_cloud_clustering.ipynb) |
 |  13  | Continuation                                          |  |
 |  14  | Consultation                                          |  |
 
