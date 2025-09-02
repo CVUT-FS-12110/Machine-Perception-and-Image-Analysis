@@ -1,7 +1,0 @@
-
-numpy
-open3d
-laspy
-matplotlib
-scikit-learn
-opencv-python-headless  # headless to avoid unnecessary GUI dependencies for server environments

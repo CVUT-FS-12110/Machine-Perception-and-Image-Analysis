@@ -1,76 +1,54 @@
 # Machine Perception and Image Processing (Labs)
 
-The subject introduces students to digital image processing and machine perception and algorithms.
+The subject introduces students to digital image processing and machine perception.
 
-## Lab schedule
-
-This course assumes basic knowledge of [the python programming language](src%2Flectures%2F00-Python-Introduction%2FPython-Introduction.ipynb).
-
-| Week | Topic                                                 | Presetation  |
-|:----:|:------------------------------------------------------|:-------------|
-|  1   | Introduction to OpenCV in Python                      | [OpenCV.ipynb](src%2Flectures%2F01_openCV%2FOpenCV.ipynb) |
-|  2   | Histogram, histogram equalization, histogram matching | [histograms.ipynb](src%2Flectures%2F02_histograms%2Fhistograms.ipynb)|
-|  3   | Continuation                                          | |
-|  4   | High Dynamic Range (HDR)                              | [HDR.ipynb](src%2Flectures%2F04_HDR%2FHDR.ipynb) |
-|  5   | Continuation                                          |  |
-|  6   | Segmentation                                          | [segmentation.ipynb](src%2Flectures%2F06_segmentation%2Fsegmentation.ipynb) |
-|  7   | Continuation                                          |  |
-|  8   | Image restoration                                     | [Image Restoration.ipynb](src%2Flectures%2F08_image_restoration%2FImage%20Restoration.ipynb) |
-|  9   | Continuation                                          | [FourierTransformation.ipynb](src%2Flectures%2F08_image_restoration%2FFourierTransformation.ipynb) |
-|  10  | Morphological operations                              | [Morphological Operations](src%2Flectures%2F07_morphological_operations%2Fmorphological_operations.ipynb)  |
-|  11  | Continuation                                          |  |
-|  12  | 3D vision and deep maps                               | point cloud - [processing](src%2Flectures%2F09_point_cloud%2Fpoint_cloud_processing.ipynb) [clustering](src%2Flectures%2F09_point_cloud%2Fpoint_cloud_clustering.ipynb) |
-|  13  | Continuation                                          |  |
-|  14  | Consultation                                          |  |
+Please study carefully the rules about [assignments](src/rules.md). 
 
 
-## Setting up your environment
+## Topics
 
-Python 3.9 was used for developing all the jupyter notebooks, however, every python > 3.8 should be fine.
+1. **Instroduction**
 
-### Windows
+   - Get familiar with Python environment (Google colab, or local installation)
+   - Make sure you know at least the [Python basics](src/introduction/Python-Introduction.ipynb).
+   - Do the [assignment](src/introduction/assignment.md).
 
-Suppose you clone this repository using `git clone` into path `C:\Users\username\source\mpip` and you already have python interpreter installed on your computer. First you need to go to projects repository, for example after opening command line you can see something like this:
+1. **Image histogram**
 
-```
-PS C:\Users\username> 
-```
+   - [assignment](src/histograms/assignment.md)
+   - [hint](src/histograms/histograms.ipynb)
 
-Use command `cd source\mpip` to get into our project folder and create virtual enviroment:
+1. **Geometric transformations**
 
-```
-python -m venv .venv
-```
+   - [assignment](src/gometric_transformations/assignment.md)
+   - [hint](src/geometric_transformations/geometric_transformations.ipynb)
 
-Note that `.venv` is my prefered convention for naming python virtual environment, you can use your own name (frequently used are `.env`, `env`, `venv` and even `ENV`)
+1. **Edge detectors and morphological operations**
 
-Activate your python environment:
+   - [assignment](src/edge_detectors/assignment.md)
+   - [hint](src/edge_detectors/edge_detection.ipynb)
 
-```
-.venv\Scripts\activate
-```
+1. **Feature detection and matching**
 
-If you encounter execution policy problems, see [this stackoverflow thread](https://stackoverflow.com/questions/18713086/virtualenv-wont-activate-on-windows). You should see something like this in your command line:
+   - [assignment](src/feature_matching/assignment.md)
+   - [hint](src/feature_matching/feature_matching.ipynb)
 
-```
-(.venv) PS C:\Users\username\source\mpip>
-```
+1. **Thresholding and contours** (segmentation)
 
-Now we need to install all dependencies used in this project, we already prepared everything you need in text file `requirements.txt`, simply run:
+   - [assignment](src/thresholding_&_contours/assignment.md)
+   - [hint](src/thresholding_&_contours/thresholding_&_contours.ipynb)
 
-```
-pip install -r requirements.txt
-```
+1. **Clustering** (segmentation)
 
-Note, that if you need some special library, feel free to install it into your virtual enviroment using `pip install <package>` or if you need specific version use `pip install <package>==<version>`.
+   - [assignment](src/kmeans_clustering/assignment.md)
+   - [hint](src/kmeans_clustering/pixel_clustering.ipynb)
 
-You are ready to go.
+1. **Template matching**
 
-## Authors
+   - [assignment](src/template_matching/assignment.md)
+   - [hint](src/template_matching/template_matching.ipynb)
 
-* **Václav Hlaváč** - *Main architect, lectures, labs* - [---]()
-* **Cyril Oswald** - *Initial work, labs* - [redeemer-zz](https://github.com/redeemer-zz)
-* **Adam Peichl** - *Initial work, labs* - [LockeErasmus](https://github.com/LockeErasmus)
+...
 
 
 
