@@ -33,3 +33,7 @@
 - **Equalized luminance-channel image** (HSV/YCrCb) + its histogram.  
 - **Comparison and short discussion** of results.  
 - **Source code** for all steps (image conversion, histogram computation, equalization, and visualization).  
+
+## Hint
+
+[Notebook](histograms.ipynb)

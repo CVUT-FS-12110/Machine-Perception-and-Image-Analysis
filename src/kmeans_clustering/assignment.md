@@ -40,3 +40,7 @@ Learn to segment images using K-means clustering, analyze cluster colors, and ex
 - **List of tested hyperparameters** (number of clusters, K, etc.).  
 - **Short discussion** comparing results and explaining insights.  
 - **Source code** used for clustering, visualization, and segmentation.  
+
+## Hint
+
+[Notebook](pixel_clustering.ipynb)

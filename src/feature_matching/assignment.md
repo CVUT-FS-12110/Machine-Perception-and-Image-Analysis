@@ -36,3 +36,7 @@
 - **Discussion** comparing the SIFT and ORB.  
 - **List of tested hyperparameters** (block size, thresholds, etc.).  
 - **Source code** used for processing and visualization.  
+
+## Hint
+
+[Notebook](feature_matching.ipynb)

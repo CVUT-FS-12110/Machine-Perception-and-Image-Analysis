@@ -47,3 +47,7 @@
 - **Heatmap + detection images** for each method, mask and image.
 - **Comparison of methods and templates** (short written discussion).  
 - **Source code** used for template matching and visualization.  
+
+## Hint
+
+[Notebook](template_matching.ipynb)

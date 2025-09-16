@@ -44,3 +44,6 @@
 - **Polygon approximation image** (simplified contour drawn).  
 - **List of tested hyperparameters** (thresholds, block sizes, C values, blur size, approximation epsilon, etc.).  
 - **Source code** used for processing and visualization.  
+
+## Hint
+[Notebook](thresholding_&_contours.ipynb)

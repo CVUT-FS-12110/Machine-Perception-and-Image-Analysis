@@ -42,6 +42,8 @@
 
 ## Hints
 
+- [Notebook](edge_detection.ipynb)
 - Start with small kernels for morphology (`3x3`, `5x5`) and increase only if needed.  
 - For noisy images, combining **Canny + morphological closing** often helps.  
 - For broken lines, **dilation** is usually a good first step.  
+

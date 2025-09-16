@@ -24,3 +24,6 @@
 - Coordinates of the points used for transformations.  
 - Calculated transformation matrices.  
 - Source code used to perform the transformations.
+
+## Hint
+[Notebook](geometric_transformations.ipynb)
