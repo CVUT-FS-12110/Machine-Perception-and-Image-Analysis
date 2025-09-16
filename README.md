@@ -13,7 +13,7 @@ Order might change.
 
 - [Image histogram](src/histograms/assignment.md)
 
-- [Geometric transformations](src/gometric_transformations/assignment.md)
+- [Geometric transformations](src/geometric_transformations/assignment.md)
 
 - [Edge detectors and morphological operations](src/edge_detectors/assignment.md)
 
