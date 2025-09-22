@@ -5,7 +5,7 @@
 - Submit your solution trough moodle in given timeframe.
 - Every submission has to contain PDF (not-zipped) with solution report called.
   `<your_name>-lab<week_number>.pdf` (for example `John_Doe-lab3.pdf` ).
-- Additional files (images, runnable python scripts, colab notebooks) submit in zip file.
+- Additional files (images, runnable python scripts, colab notebooks) submit in zip file named in the same pattern as pdf file (`<your_name>-lab<week_number>.zip`).
 
 ### PDF Report Structure
 
@@ -40,7 +40,9 @@
   - Avoid unnecessary text or filler content.
   - Adding extra content to hide flaws or mistakes will be considered academic misconduct.  
 
-### Template
+### Template and Formating
 
+- Images can be placed at the end of the document.
+- Images should have a width of **100% of the line width**. If maintaining the aspect ratio makes this impractical, adjust the size appropriately using common sense.
 - You can use provided [Latex template](template/svao_template.zip)
 - You can look at [sample pdf file](template/svao_template.pdf)
