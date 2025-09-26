@@ -7,17 +7,17 @@ Please study carefully the rules about [assignments](src/rules.md).
 
 ## Topics
 
-Order might change.
+Topics are not ordered.
 
 - [Introduction](src/introduction/assignment.md)
 
-- [Image histogram](src/histograms/assignment.md)
+- [Feature detection and matching](src/feature_matching/assignment.md)
 
 - [Geometric transformations](src/geometric_transformations/assignment.md)
 
-- [Edge detectors and morphological operations](src/edge_detectors/assignment.md)
+- [Image histogram](src/histograms/assignment.md)
 
-- [Feature detection and matching](src/feature_matching/assignment.md)
+- [Edge detectors and morphological operations](src/edge_detectors/assignment.md)
 
 - [Thresholding and contours (segmentation)](src/thresholding_&_contours/assignment.md)
 
@@ -25,9 +25,9 @@ Order might change.
 
 - [Template matching](src/template_matching/assignment.md)
 
+- [Dataset Preparation](src/dataset_creation/assignment.md)
 
-
-
+- [CNN Model for Classification](src/cnn/assignment.md)
 
 
 
