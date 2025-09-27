@@ -13,6 +13,8 @@ Topics are not ordered.
 
 - [Feature detection and matching](src/feature_matching/assignment.md)
 
+- [Camera calibration](src/camera_calibration/assignment.md)
+
 - [Geometric transformations](src/geometric_transformations/assignment.md)
 
 - [Image histogram](src/histograms/assignment.md)
@@ -28,6 +30,7 @@ Topics are not ordered.
 - [Dataset Preparation](src/dataset_creation/assignment.md)
 
 - [CNN Model for Classification](src/cnn/assignment.md)
+
 
 
 
