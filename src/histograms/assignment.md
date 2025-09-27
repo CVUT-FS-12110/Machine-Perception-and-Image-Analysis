@@ -7,7 +7,7 @@
 
 2. **Visualize the original histogram**  
    - Convert the image to **grayscale** and plot its histogram.  
-   - Experiment with different numbers of bins (e.g., 32, 64, 128, 256) and compare how much detail the histograms reveal.  
+   - Experiment with different numbers of bins (e.g., 64, 128, 256) and compare how much detail the histograms reveal.  
 
 3. **Apply histogram equalization (grayscale)**  
    - Equalize the grayscale version of your image.  
@@ -35,5 +35,6 @@
 - **Source code** for all steps (image conversion, histogram computation, equalization, and visualization).  
 
 ## Hint
+
 
 [Notebook](histograms.ipynb)
