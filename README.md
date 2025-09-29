@@ -4,6 +4,8 @@ The subject introduces students to digital image processing and machine percepti
 
 Please study carefully the rules about [assignments](src/rules.md). 
 
+⚠️ See [checklist](src/checklist.md) before submission.
+
 
 ## Topics
 
@@ -29,7 +31,7 @@ Topics are not ordered.
 
 - [Dataset Preparation](src/dataset_creation/assignment.md)
 
-- [CNN Model for Classification](src/cnn/assignment.md)
+- [CNN Model for Classification](src/cnn_classification/assignment.md)
 
 
 

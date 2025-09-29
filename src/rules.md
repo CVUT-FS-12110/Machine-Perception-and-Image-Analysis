@@ -46,3 +46,4 @@
 - Images should have a width of **100% of the line width**. If maintaining the aspect ratio makes this impractical, adjust the size appropriately using common sense.
 - You can use provided [Latex template](template/svao_template.zip)
 - You can look at [sample pdf file](template/svao_template.pdf)
+- See [checklist](checklist.md) before assignment submission.
