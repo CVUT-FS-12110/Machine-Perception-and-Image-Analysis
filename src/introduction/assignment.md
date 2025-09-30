@@ -3,13 +3,13 @@
 
 ## General instructions
 1. Take a picture with your cellphone (in colors)
-1. Open with opencv as: color, grayscale
-1. Display it with opencv / matplotlib
+1. Open with opencv (`cv.imread`) as grayscale 
+1. Save the grayscale images in full resolution (`cv.imrite`)
 
 ## Expected submission
-- Taken image (.jpg / .png)
-- Source code to open your image (.py)
-- Screenshot of the image opened with opencv / matplotlib (color and grayscale)
+- Input image 
+- Source code to open and save your image (`.py`, `.ipynb`)
+- Image in grayscale
 
 ## Hints
 
