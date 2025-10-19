@@ -17,7 +17,7 @@
 
 ### 3. Apply template matching  
 - Convert images and templates to grayscale.  
-- Use at least **four different OpenCV template matching methods**:  
+- Use **four different OpenCV template matching methods**:  
   - `cv.TM_CCOEFF`  
   - `cv.TM_CCOEFF_NORMED`  
   - `cv.TM_CCORR_NORMED`  
@@ -29,14 +29,14 @@
 
 ### 4. Discussion  
 - Which matching method performs best across your five images?
-- Suggest improvements for your specific case (e.g., resizing, image/template preprocessing).  
+- Suggest improvements for your specific case (e.g., template modifications - resizing, blur, etc.).  
 
 ## Expected Submission  
 
 - **Five input images** (scene with repeated objects).  
 - **A template**  
 - **Heatmap + detection images** for each method, mask and image.
-- Short written discussion.  
+- **Short written discussion.**
 - **Source code** used for template matching and visualization.  
 
 ## Hint
