@@ -1,24 +1,24 @@
 import cv2 as cv
 from pathlib import Path
 
-# složka s 9 obrázky (aug0_01.jpg ... aug2_03.jpg)
-INPUT_DIR = Path("AUGMENTED_OUTPUT")
-OUTPUT_DIR = Path("OUTPUT_CHECK")
+
+INPUT_DIR = Path("input_images")
+OUTPUT_DIR = Path("reference_output")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-# list listů: [[x1, y1], [x2, y2]]
+
 rectangles = [
-    # --- 3x první vstupní obrázek (aug0_01, aug0_02, aug0_03) ---
+    # ---  (aug0_01, aug0_02, aug0_03) ---
     ((345, 235), (1315, 665)),
     ((345, 235), (1315, 665)),
     ((345, 235), (1315, 665)),
 
-    # --- 3x druhý vstupní obrázek (aug1_01, aug1_02, aug1_03) ---
+    # ---  (aug1_01, aug1_02, aug1_03) ---
     ((450, 235), (1480, 665)),
     ((450, 215), (1480, 685)),
     ((450, 215), (1480, 685)),
 
-    # --- 3x třetí vstupní obrázek (aug2_01, aug2_02, aug2_03) ---
+    # --- (aug2_01, aug2_02, aug2_03) ---
     ((345, 235), (1315, 665)),
     ((345, 235), (1315, 665)),
     ((345, 235), (1315, 665)),
