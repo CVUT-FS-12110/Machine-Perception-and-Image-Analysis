@@ -11,27 +11,28 @@ Please study carefully the rules about [assignments](src/rules.md).
 
 Topics are not ordered.
 
-- [Introduction](src/introduction/assignment.md)
+1. [Introduction](src/introduction/assignment.md)
 
-- [Feature detection and matching](src/feature_matching/assignment.md)
+2. [Image histogram](src/histograms/assignment.md)
 
-- [Camera calibration](src/camera_calibration/assignment.md)
+3. [Geometric transformations](src/geometric_transformations/assignment.md)
 
-- [Geometric transformations](src/geometric_transformations/assignment.md)
+4. [Edge detectors and morphological operations](src/edge_detectors/assignment.md)
 
-- [Image histogram](src/histograms/assignment.md)
+5. [Template matching](src/template_matching/assignment.md)
 
-- [Edge detectors and morphological operations](src/edge_detectors/assignment.md)
+6. [Dataset Preparation](src/dataset_creation/assignment.md)
 
-- [Thresholding and contours (segmentation)](src/thresholding_&_contours/assignment.md)
+7. [CNN Model for Classification](src/cnn_classification/assignment.md)
 
-- [Clustering (segmentation)](src/kmeans_clustering/assignment.md)
+8. [Thresholding and contours (segmentation)](src/thresholding_&_contours/assignment.md)
 
-- [Template matching](src/template_matching/assignment.md)
+9. [Clustering (segmentation)](src/kmeans_clustering/assignment.md)
 
-- [Dataset Preparation](src/dataset_creation/assignment.md)
+10. [Feature detection and matching](src/feature_matching/assignment.md)
 
-- [CNN Model for Classification](src/cnn_classification/assignment.md)
+11. [Camera calibration](src/camera_calibration/assignment.md)
+
 
 
 
