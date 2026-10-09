@@ -8,15 +8,11 @@ Every module accepts a user-supplied image through the common workspace upload c
 
 Template matching additionally accepts images dropped directly onto its search canvas. Drag a rectangle over the image to define the template. The search image, extracted template, and two-dimensional response heatmap are displayed separately.
 
+The K-means posterization module loads `./assets/obrazky/meduzy.jpeg` by default and accepts a separate image by file selection or drag-and-drop. Clustering runs in the browser over RGB values with either k-means++ or random initialization.
+
 ## Local use
 
-There is no build step and no external dependency. From the repository root run:
-
-```powershell
-python -m http.server 8080
-```
-
-Then open `http://localhost:8080`.
+There is no build step, external dependency, or local server. Open the root `index.html` directly in a browser. Scripts, styles, and default images use paths relative to that file.
 
 ## GitHub Pages
 
