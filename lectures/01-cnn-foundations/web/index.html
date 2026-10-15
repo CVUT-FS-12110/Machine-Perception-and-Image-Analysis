@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Convolutional Neural Networks — Slides</title>
+<link rel="stylesheet" href="../../shared/deck.css">
+<script>window.DECK_PARTS = ["", "Part 1 · Images and neurons", "Part 2 · Convolution step by step",
+  "Part 3 · Building a CNN", "Part 4 · Training", "Part 5 · Data and diagnosis"];</script>
+<script src="../../shared/deck.js"></script>
+<script src="../../shared/kit.js"></script>
+<script src="viz1.js"></script>
+<script src="viz2.js"></script>
+<script src="viz3.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="ah-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0070ba"/></marker>
+  <marker id="ah-blue-s" viewBox="0 0 10 10" refX="3" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0070ba"/></marker>
+  <marker id="ah-magenta" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c2187a"/></marker>
+  <marker id="ah-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2e7d3a"/></marker>
+  <marker id="ah-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b3261e"/></marker>
+  <marker id="ah-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c46a00"/></marker>
+  <marker id="ah-muted" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#687178"/></marker>
+</defs></svg>
+
+<div id="viewport"><div id="stage">
+
+<!-- ================================================================= title -->
+<section class="slide title">
+  <h1>Convolutional Neural Networks</h1>
+  <div class="sub">From Pixels to Learned Features</div>
+  <div class="who">Matouš Cejnek</div>
+  <div class="inst">Department of Instrumentation and Control Engineering<br>Faculty of Mechanical Engineering, CTU in Prague</div>
+  <div class="hint">
+    <span class="kbd">→</span> <span class="kbd">Space</span> next step ·
+    <span class="kbd">←</span> back ·
+    <span class="kbd">F</span> fullscreen ·
+    <span class="kbd">O</span> overview ·
+    <span class="kbd">H</span> help
+  </div>
+</section>
+
+<!-- ================================================================= part 1 -->
+<section class="slide" data-part="1"><h2>Why This Lecture</h2><div class="body">
+  <ul><li>CNNs transform images into hierarchies of features.</li>
+  <li>The goal is to understand tensor shapes, parameters, and gradient flow.</li>
+  <li>By the end, you will be able to design and diagnose a small CNN.</li></ul>
+  <div class="viz" data-viz="goals"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Roadmap</h2><div class="body">
+  <ul><li>Five parts; each one builds only on the previous ones.</li>
+  <li>Every new operation is first shown on a tiny numeric example.</li>
+  <li>Check questions close each block.</li></ul>
+  <div class="viz" data-viz="roadmap"></div></div></section>
+
+<section class="slide" data-part="1"><h2>From Measurement to Decision</h2><div class="body">
+  <ul><li>A camera provides an array of intensities, not objects.</li>
+  <li>The model must separate changes in the object from changes in image acquisition.</li>
+  <li>The output must match the task and its decision tolerance.</li></ul>
+  <div class="viz" data-viz="measurement"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Four Typical Outputs</h2><div class="body">
+  <ul><li>Classification: one label (or a vector of independent attributes).</li>
+  <li>Detection: a variable number of boxes, each with a class.</li>
+  <li>Segmentation: a class for every pixel. Regression: continuous quantities.</li></ul>
+  <div class="viz" data-viz="tasks"></div></div></section>
+
+<section class="slide" data-part="1"><h2>What Changes in an Image?</h2><div class="body">
+  <ul><li>Position, scale, rotation, and deformation of the object.</li>
+  <li>Illumination, exposure, noise, and background.</li>
+  <li>Occlusion and within-class variability.</li></ul>
+  <div class="viz"><img src="../assets/invariance-grid.png" alt="Same object under different position, scale, rotation and illumination" style="max-height:100%;max-width:70%"></div></div></section>
+
+<section class="slide question" data-sub="Discuss in pairs"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>What should remain invariant when a product is inspected by a camera?</h3>
+  <div class="answer step">Give one desirable and one undesirable invariance.</div></div><div class="qmark">?</div></div></section>
+
+<section class="slide" data-part="1"><h2>An Image Is a Tensor</h2><div class="body">
+  <ul><li>A grayscale image is a matrix of numbers, one per pixel.</li>
+  <li>A colour image adds a third axis: channels. In PyTorch the order is <span class="m">C</span> × <span class="m">H</span> × <span class="m">W</span>.</li>
+  <li>Everything a CNN does is arithmetic on such arrays.</li></ul>
+  <div class="viz" data-viz="imageTensor"></div></div></section>
+
+<section class="slide" data-part="1"><h2>A Single Neuron</h2><div class="body">
+  <ul><li>Weighted sum of inputs plus a bias: <span class="m">z</span> = <b class="mb">w</b><sup>T</sup><b class="mb">x</b> + <span class="m">b</span>.</li>
+  <li>An activation function <span class="m">φ</span> turns <span class="m">z</span> into the output <span class="m">y</span> = <span class="m">φ</span>(<span class="m">z</span>).</li>
+  <li>Learning means finding <b class="mb">w</b> and <span class="m">b</span> that reduce the loss.</li></ul>
+  <div class="viz" data-viz="neuron"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Why We Need Nonlinearity</h2><div class="body">
+  <ul><li>Two linear layers in a row are again one linear map: <b class="mb">W</b><sub>2</sub><b class="mb">W</b><sub>1</sub> = <b class="mb">W</b>.</li>
+  <li>An activation between them breaks this collapse; then depth adds expressive power.</li>
+  <li>ReLU = max(0, <span class="m">z</span>) is the default in CNNs: cheap, with well-behaved gradients.</li></ul>
+  <div class="viz" data-viz="nonlinearity"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Fully Connected Networks on Images</h2><div class="body"><div class="cols">
+  <ul><li>The image is flattened into one long vector.</li>
+  <li>Every input pixel is connected to every unit of the next layer.</li>
+  <li>224 × 224 × 3 inputs → 1000 units: <b>150 million</b> weights in one layer.</li>
+  <li>Flattening also throws away which pixels are neighbours.</li></ul>
+  <div class="viz" data-viz="fcImage"></div></div></div></section>
+
+<section class="slide" data-part="1"><h2>The Same Pattern at Another Position</h2><div class="body">
+  <ul><li>A fully connected layer has a separate weight for every pixel index.</li>
+  <li>A pattern seen at position A teaches nothing about position B.</li>
+  <li>We want one detector that is reused everywhere in the image.</li></ul>
+  <div class="viz" data-viz="translation"></div></div></section>
+
+<section class="slide" data-part="1"><h2>The Inductive Bias of CNNs</h2><div class="body">
+  <ul><li>Local connectivity: an output depends on a small neighbourhood only.</li>
+  <li>Weight sharing: the same small kernel is applied at every position.</li>
+  <li>Hierarchy: stacked layers compose edges into parts and parts into objects.</li></ul>
+  <div class="viz" data-viz="inductive"></div></div></section>
+
+<!-- ================================================================= part 2 -->
+<section class="slide" data-part="2"><h2>Convolution as a Local Operator</h2><div class="body">
+  <ul><li>Take a small window of the input, e.g. 3 × 3 pixels.</li>
+  <li>Multiply it cell by cell with a kernel of the same size and add up the products.</li>
+  <li>The result is one number of the output map. The kernel values are learned weights.</li></ul>
+  <div class="viz" data-viz="localOp"></div></div></section>
+
+<section class="slide" data-part="2"><h2>The Sliding Window in 1D</h2><div class="body">
+  <p class="lead">Start with a 1D signal: the kernel <span class="m">w</span> = [−1, 0, 1] is placed over three neighbouring inputs, gives one output, and then moves one cell to the right.</p>
+  <div class="viz" data-viz="slide1d"></div></div></section>
+
+<section class="slide" data-part="2"><h2>One Output Value in 2D</h2><div class="body">
+  <ul><li>In 2D the window is a 3 × 3 patch; the kernel is a 3 × 3 matrix.</li>
+  <li>Multiply the 9 pairs of matching cells and add them: one number.</li>
+  <li>In general: <span class="m">y</span><sub><span class="m">i,j</span></sub> = Σ<sub><span class="m">u</span></sub> Σ<sub><span class="m">v</span></sub> <span class="m">x</span><sub><span class="m">i</span>+<span class="m">u</span>, <span class="m">j</span>+<span class="m">v</span></sub> · <span class="m">k</span><sub><span class="m">u,v</span></sub>.</li></ul>
+  <div class="viz" data-viz="oneOut"></div></div></section>
+
+<section class="slide" data-part="2"><h2>The Sliding Window in 2D</h2><div class="body">
+  <p class="lead">The window moves left to right, then down by one row. Each position fills one cell of the output; the kernel never changes.</p>
+  <div class="viz" data-viz="slide2d"></div></div></section>
+
+<section class="slide" data-part="2"><h2>What Does a Kernel Detect?</h2><div class="body">
+  <ul><li>The output is large where the input patch looks like the kernel.</li>
+  <li>[−1, 0, 1] in every row compares right with left: a vertical-edge detector.</li>
+  <li>A CNN does not get such kernels by hand; it learns them from data.</li></ul>
+  <div class="viz" data-viz="edgeDetect"></div></div></section>
+
+<section class="slide" data-part="2"><h2>The Same Idea on a Real Image</h2><div class="body">
+  <ul><li>One 3 × 3 kernel slides over the whole image, row by row; its output is a <i>feature map</i>.</li>
+  <li>Flat regions give values near zero (grey); edges give strong responses. Try other kernels, or drop your own image.</li>
+  <li>Libraries actually compute cross-correlation (no kernel flip); for learned kernels the difference does not matter.</li></ul>
+  <div class="viz" data-viz="realConv"></div></div></section>
+
+<section class="slide question" data-sub="Read a kernel"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>What does the kernel<br><span class="code" style="font-size:.8em">[[1, 1, 1], [0, 0, 0], [−1, −1, −1]]</span><br>respond to?</h3>
+  <div class="answer step">Horizontal edges: bright rows above dark rows give a large positive output, the reverse a negative one.</div></div><div class="qmark">?</div></div></section>
+
+<section class="slide" data-part="2"><h2>Output Size: Counting Window Positions</h2><div class="body">
+  <ul><li>The output has as many values as there are valid window positions.</li>
+  <li>Without padding the window must stay inside the input.</li>
+  <li>Each layer therefore shrinks the signal by <span class="m">K</span> − 1.</li></ul>
+  <div class="viz" data-viz="countPositions"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Padding</h2><div class="body">
+  <ul><li>Padding adds <span class="m">P</span> extra values (usually zeros) at each border.</li>
+  <li>With <span class="m">P</span> = (<span class="m">K</span> − 1)/2 and stride 1 the output keeps the input size (“same”).</li>
+  <li>Border outputs partly see artificial values; keep this in mind when measuring near edges.</li></ul>
+  <div class="viz" data-viz="padding1d"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Stride</h2><div class="body">
+  <ul><li>Stride <span class="m">S</span> is the step of the window; <span class="m">S</span> = 2 skips every second position.</li>
+  <li>It filters and downsamples in one operation, so later layers are cheaper.</li>
+  <li>Large strides can skip small objects and cause aliasing.</li></ul>
+  <div class="viz" data-viz="stride1d"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Dilation</h2><div class="body">
+  <ul><li>Dilation <span class="m">D</span> inserts gaps between the kernel taps.</li>
+  <li>The kernel covers a span of <span class="m">D</span>(<span class="m">K</span> − 1) + 1 inputs with only <span class="m">K</span> weights.</li>
+  <li>It enlarges the view without downsampling (common in segmentation).</li></ul>
+  <div class="viz" data-viz="dilation1d"></div></div></section>
+
+<section class="slide" data-part="2"><h2>The General Output-Size Formula</h2><div class="body">
+  <ul><li>All four effects combine into one formula, applied separately to height and width.</li>
+  <li>Move the sliders and predict the output size before you look.</li></ul>
+  <div class="viz" data-viz="general1d"></div></div></section>
+
+<section class="slide question" data-sub="Calculation"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>Input 32, kernel 3, padding 1, stride 2. What is the output size?</h3>
+  <div class="answer step">⌊(32 + 2 − 3) / 2⌋ + 1 = ⌊15.5⌋ + 1 = <b>16</b>.</div></div><div class="qmark">?</div></div></section>
+
+<section class="slide" data-part="2"><h2>Input Channels</h2><div class="body">
+  <ul><li>An RGB input has three channels, so the filter also has three 3 × 3 slices.</li>
+  <li>Filter depth always equals the number of input channels <span class="m">C</span><sub>in</sub>.</li>
+  <li>All 3 · 3 · 3 = 27 products are summed: one filter gives one output channel.</li></ul>
+  <div class="viz" data-viz="channels"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Multiple Output Channels</h2><div class="body">
+  <ul><li>A layer has <span class="m">C</span><sub>out</sub> independent filters, each looking for a different pattern.</li>
+  <li>Their feature maps are stacked into the output tensor <span class="m">C</span><sub>out</sub> × <span class="m">H</span><sub>o</sub> × <span class="m">W</span><sub>o</sub>.</li>
+  <li>The next layer sees <span class="m">C</span><sub>out</sub> as its number of input channels.</li></ul>
+  <div class="viz" data-viz="multiOut"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Shapes in Code</h2><div class="body">
+  <ul><li>A batch of images is a 4D tensor <span class="m">N</span> × <span class="m">C</span> × <span class="m">H</span> × <span class="m">W</span>.</li>
+  <li>The weight tensor of a convolution is <span class="m">C</span><sub>out</sub> × <span class="m">C</span><sub>in</sub> × <span class="m">K</span> × <span class="m">K</span>.</li>
+  <li>Spatial output size follows the formula; the channel count is chosen by the designer.</li></ul>
+  <div class="viz"><pre class="code" style="font-size:25px;line-height:1.5;background:#f6f7f8;border:1px solid var(--rule);padding:22px 34px;margin:0">conv = nn.Conv2d(in_channels=3, out_channels=32,
+                 kernel_size=3, stride=2, padding=1)
+
+<span class="step">x.shape            <span style="color:var(--muted)"># (N, 3, 128, 128)</span></span>
+<span class="step">conv(x).shape      <span style="color:var(--muted)"># (N, 32, 64, 64)    ⌊(128+2−3)/2⌋+1 = 64</span></span>
+<span class="step">conv.weight.shape  <span style="color:var(--muted)"># (32, 3, 3, 3)</span></span>
+<span class="step">conv.bias.shape    <span style="color:var(--muted)"># (32,)</span></span></pre></div></div></section>
+
+<section class="slide" data-part="2"><h2>Parameter Count</h2><div class="body">
+  <ul><li>Weights: <span class="m">C</span><sub>out</sub> filters of size <span class="m">K</span> × <span class="m">K</span> × <span class="m">C</span><sub>in</sub>, plus one bias per filter.</li>
+  <li>The count does not depend on the image resolution <span class="m">H</span> × <span class="m">W</span>.</li>
+  <li>Thanks to locality and sharing, it is orders of magnitude smaller than a dense layer.</li></ul>
+  <div class="viz" data-viz="params"></div></div></section>
+
+<section class="slide question" data-sub="Estimate the parameters"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>How many weights are in a 3 × 3 convolution with 32 input and 64 output channels?</h3>
+  <div class="answer step">Without bias: 3 · 3 · 32 · 64 = <b>18 432</b>; with bias 18 496.</div></div><div class="qmark">?</div></div></section>
+
+<section class="slide" data-part="2"><h2>Parameters, Computation, and Memory</h2><div class="body">
+  <ul><li>Few parameters do not mean little computation: each weight is used at every output position.</li>
+  <li>Activations grow with resolution and must be stored for the backward pass.</li>
+  <li>High-resolution layers dominate cost and memory; low-resolution layers dominate parameters.</li></ul>
+  <div class="viz" data-viz="cost"></div></div></section>
+
+<!-- ================================================================= part 3 -->
+<section class="slide" data-part="3"><h2>A Feature Map Is Not an Image</h2><div class="body">
+  <ul><li>Each output channel is the response map of one learned detector.</li>
+  <li>Some channels have a simple meaning (edges, blobs); many do not.</li>
+  <li>Their meaning emerges together with the layers that read them.</li></ul>
+  <div class="viz" data-viz="featureMaps"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Stacking Layers Needs Nonlinearity</h2><div class="body">
+  <ul><li>Convolution is linear: two convolutions in a row equal one larger convolution.</li>
+  <li>A ReLU after each convolution prevents this collapse, exactly as for neurons.</li>
+  <li>The standard block: convolution → normalization → ReLU.</li></ul>
+  <div class="viz" data-viz="stack"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Receptive Field</h2><div class="body">
+  <ul><li>The receptive field is the input region that can influence one output element.</li>
+  <li>One 3 × 3 layer sees 3 pixels per axis; two layers see 5; three see 7.</li>
+  <li>Deep layers can therefore react to larger structures than any single kernel.</li></ul>
+  <div class="viz" data-viz="receptive"></div></div></section>
+
+<section class="slide" data-part="3"><h2>How Fast the Receptive Field Grows</h2><div class="body">
+  <ul><li>Stride and pooling make later layers take bigger steps in the input.</li>
+  <li>The receptive field then grows multiplicatively, not just by <span class="m">K</span> − 1 per layer.</li>
+  <li>The theoretical field is larger than the region that effectively matters.</li></ul>
+  <div class="viz" data-viz="rfGrowth"></div></div></section>
+
+<section class="slide" data-part="3"><h2>A Hierarchy of Features</h2><div class="body">
+  <ul><li>Early layers: small receptive field → edges and colours.</li>
+  <li>Middle layers combine them into corners, arcs, and textures, then into parts.</li>
+  <li>Late layers carry object- and task-specific information.</li></ul>
+  <div class="viz" data-viz="hierarchy"></div></div></section>
+
+<section class="slide" data-part="3"><h2>1 × 1 Convolution</h2><div class="body">
+  <ul><li>A 1 × 1 kernel looks at a single pixel, but across all its channels.</li>
+  <li>It is a small dense layer applied identically at every pixel.</li>
+  <li>Used to reduce or increase the number of channels cheaply (bottlenecks).</li></ul>
+  <div class="viz" data-viz="pointwise"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Pooling</h2><div class="body">
+  <ul><li>Pooling slides a window like convolution but uses a fixed rule instead of weights.</li>
+  <li>Max pooling keeps the strongest response; average pooling keeps the mean.</li>
+  <li>It halves the resolution and adds tolerance to small shifts.</li></ul>
+  <div class="viz" data-viz="pooling"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Pooling versus Strided Convolution</h2><div class="body">
+  <ul><li>Both halve the resolution.</li>
+  <li>Pooling has no learnable weights; a strided convolution learns what to keep.</li>
+  <li>The choice affects cost, aliasing, and localization accuracy.</li></ul>
+  <div class="viz" data-viz="poolVsStride"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Global Average Pooling</h2><div class="body">
+  <ul><li>Each channel is averaged over all positions into a single number.</li>
+  <li>The result is a vector of length <span class="m">C</span>, regardless of the input resolution.</li>
+  <li>It replaces a large flatten layer before classification, but discards location.</li></ul>
+  <div class="viz" data-viz="gap"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Input Normalization</h2><div class="body">
+  <ul><li>Subtract the per-channel mean and divide by the standard deviation.</li>
+  <li>Use the statistics of the pretraining data (e.g. ImageNet) or of the training set.</li>
+  <li>Store them with the model; inference must use exactly the same values.</li></ul>
+  <div class="viz" data-viz="normalize"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Batch Normalization</h2><div class="body">
+  <ul><li>The same idea applied inside the network, to the activations of each channel.</li>
+  <li>During training, statistics come from the current minibatch; <span class="m">γ</span>, <span class="m">β</span> are learned.</li>
+  <li>At inference, stored running averages are used instead.</li></ul>
+  <div class="viz" data-viz="batchnorm"></div></div></section>
+
+<section class="slide" data-part="3"><h2>A Minimal CNN</h2><div class="body">
+  <ul><li>Three conv blocks halve the resolution and increase the number of channels.</li>
+  <li>Global average pooling turns the last feature map into a vector.</li>
+  <li>A linear layer maps it to one score per class.</li></ul>
+  <div class="viz" data-viz="minimalCNN"></div></div></section>
+
+<section class="slide" data-part="3"><h2>A Minimal CNN in Numbers</h2><div class="body">
+  <div class="viz" data-viz="rowSteps" style="flex-direction:column">
+  <table class="t">
+    <thead><tr><th>layer</th><th>output shape</th><th class="r">parameters</th><th class="r">receptive field</th><th class="r">jump</th></tr></thead>
+    <tbody>
+      <tr><td>input</td><td>3 × 128 × 128</td><td class="r">–</td><td class="r">1</td><td class="r">1</td></tr>
+      <tr><td>conv 3 × 3, <span class="m">S</span> = 2</td><td>32 × 64 × 64</td><td class="r">3·9·32 + 32 = 896</td><td class="r">3</td><td class="r">2</td></tr>
+      <tr><td>conv 3 × 3, <span class="m">S</span> = 2</td><td>64 × 32 × 32</td><td class="r">32·9·64 + 64 = 18 496</td><td class="r">7</td><td class="r">4</td></tr>
+      <tr><td>conv 3 × 3, <span class="m">S</span> = 2</td><td>128 × 16 × 16</td><td class="r">64·9·128 + 128 = 73 856</td><td class="r">15</td><td class="r">8</td></tr>
+      <tr><td>global average pool</td><td>128</td><td class="r">–</td><td class="r">whole image</td><td class="r"></td></tr>
+      <tr><td>linear</td><td>10</td><td class="r">128·10 + 10 = 1 290</td><td class="r"></td><td class="r"></td></tr>
+    </tbody>
+    <tfoot><tr class="total"><td>total</td><td></td><td class="r">94 538</td><td></td><td></td></tr></tfoot>
+  </table>
+  <p style="font-size:22px;color:var(--muted);margin-top:26px">Every number follows from the formulas of Part 2. BatchNorm adds 2<span class="m">C</span> learnable values per block (omitted).</p>
+  </div></div></section>
+
+<section class="slide question" data-sub="Think about shapes"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>Why does this network accept a 256 × 256 image without any change?</h3>
+  <div class="answer step">Convolutions work at any resolution; global average pooling always returns a vector of length 128, so the linear layer still fits.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 4 -->
+<section class="slide" data-part="4"><h2>From Features to Logits</h2><div class="body">
+  <ul><li>The last linear layer produces one real number per class: the <i>logits</i>.</li>
+  <li>Larger logit = more evidence for that class.</li>
+  <li>Logits are not probabilities yet.</li></ul>
+  <div class="viz" data-viz="logits"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Softmax and Sigmoid</h2><div class="body">
+  <ul><li>Softmax turns logits into a distribution over mutually exclusive classes.</li>
+  <li>Sigmoid squashes each logit separately; use it for independent labels.</li>
+  <li>Move the logits: softmax always sums to one, sigmoid outputs do not.</li></ul>
+  <div class="viz" data-viz="softmax"></div></div></section>
+
+<section class="slide" data-part="4"><h2>The Loss Function</h2><div class="body">
+  <ul><li>A loss compares the prediction with the target and returns one number.</li>
+  <li>Its gradient tells the optimizer how to change the weights.</li>
+  <li>It must match the output type; a reporting metric need not be a good loss.</li></ul>
+  <div class="viz" data-viz="lossLoop"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Cross-Entropy</h2><div class="body">
+  <ul><li>Classification loss: minus the log-probability of the correct class.</li>
+  <li>Confident correct predictions cost little; confident mistakes cost a lot.</li>
+  <li>Most libraries take logits directly; do not apply softmax twice.</li></ul>
+  <div class="viz" data-viz="crossEntropy"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Regression and Robust Losses</h2><div class="body">
+  <ul><li>MSE penalizes large errors quadratically, so outliers dominate.</li>
+  <li>MAE grows linearly: robust, but its gradient magnitude never shrinks.</li>
+  <li>Huber is quadratic near zero and linear for large errors.</li></ul>
+  <div class="viz" data-viz="regression"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Segmentation Losses</h2><div class="body">
+  <ul><li>Pixel-wise cross-entropy is classification at every pixel.</li>
+  <li>When the object covers few pixels, the background dominates the loss.</li>
+  <li>Dice loss measures region overlap and is insensitive to this imbalance; either loss works on its own.</li></ul>
+  <div class="viz" data-viz="segLoss"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Gradient Descent in One Dimension</h2><div class="body">
+  <ul><li>Imagine the loss as a function of a single weight <span class="m">w</span>.</li>
+  <li>The derivative is the slope; stepping against it lowers the loss.</li>
+  <li>The learning rate <span class="m">η</span> sets the size of the step. Press → to take a step.</li></ul>
+  <div class="viz" data-viz="gd1d"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Choosing the Learning Rate</h2><div class="body">
+  <ul><li>Too small: training is slow and may stall.</li>
+  <li>Too large: steps overshoot the minimum, the loss oscillates or becomes NaN.</li>
+  <li>In practice: try values on a log scale (10<sup>−4</sup>, 10<sup>−3</sup>, 10<sup>−2</sup>) and watch the curve.</li></ul>
+  <div class="viz" data-viz="lrPanels"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Backpropagation</h2><div class="body">
+  <ul><li>The forward pass computes the prediction and stores intermediate values.</li>
+  <li>The backward pass applies the chain rule from the loss back to every weight.</li>
+  <li>One backward pass gives the gradient for all millions of weights at once.</li></ul>
+  <div class="viz" data-viz="backprop"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Gradient of a Shared Kernel</h2><div class="body">
+  <ul><li>The same kernel produced every output value.</li>
+  <li>Its gradient is therefore a sum of contributions from all positions.</li>
+  <li>A pattern that matters anywhere in the image updates the same weights.</li></ul>
+  <div class="viz" data-viz="sharedGrad"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Batch, Iteration, and Epoch</h2><div class="body">
+  <ul><li>The gradient is estimated from a minibatch of <span class="m">B</span> images, not from the whole set.</li>
+  <li>One iteration = one minibatch = one weight update; one epoch = one pass over the data.</li>
+  <li>The number of updates matters more than the epoch count alone.</li></ul>
+  <div class="viz" data-viz="batchEpoch"></div></div></section>
+
+<section class="slide" data-part="4"><h2>SGD with Momentum and AdamW</h2><div class="body">
+  <ul><li>Minibatch gradients are noisy; momentum averages them over recent steps.</li>
+  <li>AdamW additionally adapts the step size to each parameter.</li>
+  <li>Both paths below are computed live on the same elongated loss surface.</li></ul>
+  <div class="viz" data-viz="optimizers"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Learning-Rate Schedule</h2><div class="body">
+  <ul><li>Warm-up protects early training from steps that are too large.</li>
+  <li>Cosine or step decay refines the final stage with smaller steps.</li>
+  <li>Recheck the learning rate whenever the batch size changes.</li></ul>
+  <div class="viz" data-viz="schedule"></div></div></section>
+
+<!-- ================================================================= part 5 -->
+<section class="slide" data-part="5"><h2>Dataset Splits</h2><div class="body">
+  <ul><li>Train is used to learn parameters.</li>
+  <li>Validation guides model and hyperparameter selection.</li>
+  <li>Test is used only once, for the final independent estimate.</li></ul>
+  <div class="viz" data-viz="splits"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Information Leakage</h2><div class="body">
+  <ul><li>Images of the same product must not appear in more than one split.</li>
+  <li>Fit preprocessing statistics only on the training set.</li>
+  <li>Temporal and spatial correlation can inflate the measured performance.</li></ul>
+  <div class="viz" data-viz="leakage"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Overfitting</h2><div class="body">
+  <ul><li>Training loss keeps falling while validation loss starts to rise.</li>
+  <li>The model memorizes random or source-specific details of the training set.</li>
+  <li>Keep the checkpoint with the best validation result (early stopping).</li></ul>
+  <div class="viz" data-viz="overfit"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Underfitting</h2><div class="body">
+  <ul><li>Both training and validation results are poor.</li>
+  <li>Causes: too small a model, too short training, a bad learning rate, or wrong inputs.</li>
+  <li>Stronger regularization does not solve underfitting.</li></ul>
+  <div class="viz" data-viz="underfit"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Data Augmentation</h2><div class="body">
+  <ul><li>Random transformations create new training samples; the label must stay correct.</li>
+  <li>Apply geometry consistently to the image, mask, and boxes.</li>
+  <li>Photometric changes simulate the camera and illumination.</li></ul>
+  <div class="viz" data-viz="augment"></div></div></section>
+
+<section class="slide question" data-sub="Design an augmentation"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>Is a horizontal flip suitable when reading digits or detecting a defect on the left?</h3>
+  <div class="answer step">No: augmentation encodes invariances and must not change the meaning of the target.</div></div><div class="qmark">?</div></div></section>
+
+<section class="slide" data-part="5"><h2>Class Imbalance</h2><div class="body">
+  <ul><li>Accuracy can hide complete failure on a rare class.</li>
+  <li>Use per-class recall, precision, and a confusion matrix.</li>
+  <li>Sampling, a weighted loss, or focal loss may help.</li></ul>
+  <div class="viz" data-viz="imbalance"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Transfer Learning</h2><div class="body">
+  <ul><li>A pretrained backbone already provides general visual features.</li>
+  <li>Train the new head first, then carefully unfreeze the backbone.</li>
+  <li>The domain shift determines how many layers should be adapted.</li></ul>
+  <div class="viz" data-viz="transfer"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Weight Decay and Dropout</h2><div class="body">
+  <ul><li>Weight decay limits the magnitude of weights.</li>
+  <li>Dropout randomly disables activations during training.</li>
+  <li>For CNNs, sound augmentation often matters more than a high dropout rate.</li></ul>
+  <div class="viz" data-viz="regularize"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Diagnosing Training Curves</h2><div class="body">
+  <ul><li>Track training and validation loss as well as task metrics.</li>
+  <li>A plateau may expose a limit in data, representation, or optimization.</li>
+  <li>A sudden NaN indicates a numerical error or an excessive step size.</li></ul>
+  <div class="viz" data-viz="diagnostics"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Confusion Matrix</h2><div class="body">
+  <ul><li>Rows are true classes, columns are predictions; off-diagonal cells are errors.</li>
+  <li>A row-normalized matrix helps when classes are imbalanced.</li>
+  <li>Inspect the actual images behind the largest confusions.</li></ul>
+  <div class="viz" data-viz="confusion"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Errors as Requirements</h2><div class="body">
+  <ul><li>Group errors by illumination, camera, class, and geometry.</li>
+  <li>Each group leads to a different pipeline correction.</li>
+  <li>One aggregate number cannot explain operational risk.</li></ul>
+  <div class="viz" data-viz="errorTax"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Reproducibility</h2><div class="body">
+  <ul><li>Store the seed, split, dataset version, and configuration.</li>
+  <li>A checkpoint must contain both weights and normalization.</li>
+  <li>Report variation across runs when the dataset is small.</li></ul>
+  <div class="viz" data-viz="repro"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Compute Budget</h2><div class="body">
+  <ul><li>Parameters determine model size, not latency.</li>
+  <li>FLOPs ignore memory transfers and hardware behaviour.</li>
+  <li>Measure latency on the target device with a realistic batch size.</li></ul>
+  <div class="viz" data-viz="compute"></div></div></section>
+
+<section class="slide" data-part="5"><h2>A Sensible First Experiment</h2><div class="body">
+  <ul><li>Start with a simple pretrained backbone and a short training run.</li>
+  <li>Sanity checks: one batch must be fit almost perfectly; random labels must not generalize.</li>
+  <li>Look at augmented inputs before training; then change one thing at a time.</li></ul>
+  <div class="viz" data-viz="experiment"></div></div></section>
+
+<section class="slide" data-part="5"><h2>A Machine-Vision Workflow</h2><div class="body">
+  <ul><li>Define the error tolerance and the unit used for data splitting.</li>
+  <li>Build a baseline and a catalogue of failures.</li>
+  <li>Iterate on data and measurement first, then on architecture.</li></ul>
+  <div class="viz" data-viz="workflow"></div></div></section>
+
+<section class="slide question" data-sub="Mini-design exercise"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>Design a CNN-based defect inspection: input, output, loss, and two metrics.</h3>
+  <div class="answer step">Justify the split unit and identify which invariances are safe.</div></div><div class="qmark">?</div></div></section>
+
+<section class="slide" data-part="5"><h2>What to Remember</h2><div class="body">
+  <ul><li>Convolution slides one small learned detector over the whole image.</li>
+  <li>Output shape, parameters, and receptive field can be computed before training.</li>
+  <li>A good experiment is measurable, reproducible, and analyzes its errors.</li></ul>
+  <div class="viz" data-viz="summary"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Before the Next Lecture</h2><div class="body">
+  <ul><li>You can calculate the shape and parameters of a convolutional layer.</li>
+  <li>You can distinguish a logit, activation, loss, and metric.</li>
+  <li>Next, we will combine a backbone, neck, and head for specific tasks.</li></ul>
+  <div class="viz" data-viz="nextLecture"></div></div></section>
+
+<div id="footer"></div><div id="stepdots"></div><div id="progress"></div>
+</div></div>
+
+<div id="overview"></div>
+<div id="help"><b>Keys</b><br>
+→ / Space / PageDown / click — next step<br>
+← / PageUp — previous step<br>
+Shift + → / ← — skip to next / previous slide<br>
+F — fullscreen · O — overview · R — restart slide<br>
+type a number + Enter — go to slide<br>
+Ctrl + P — print / save as PDF (final state of each slide)</div>
+</body>
+</html>

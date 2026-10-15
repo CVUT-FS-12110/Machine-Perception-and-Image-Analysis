@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Learned 3D and 4D Reconstruction — Slides</title>
+<link rel="stylesheet" href="../../shared/deck.css">
+<script>window.DECK_PARTS = ["", "Part 1 · From VSLAM to dense 3D", "Part 2 · Representing 3D", "Part 3 · Learned depth",
+  "Part 4 · Neural radiance fields", "Part 5 · Gaussian splatting", "Part 6 · Dynamic scenes", "Part 7 · Evaluation and practice"];</script>
+<script src="../../shared/deck.js"></script>
+<script src="../../shared/kit.js"></script>
+<script src="vizA.js"></script>
+<script src="vizB.js"></script>
+<script src="vizC.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="ah-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0070ba"/></marker>
+  <marker id="ah-blue-s" viewBox="0 0 10 10" refX="3" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0070ba"/></marker>
+  <marker id="ah-magenta" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c2187a"/></marker>
+  <marker id="ah-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2e7d3a"/></marker>
+  <marker id="ah-green-s" viewBox="0 0 10 10" refX="3" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2e7d3a"/></marker>
+  <marker id="ah-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b3261e"/></marker>
+  <marker id="ah-red-s" viewBox="0 0 10 10" refX="3" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b3261e"/></marker>
+  <marker id="ah-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c46a00"/></marker>
+  <marker id="ah-muted" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#687178"/></marker>
+</defs></svg>
+
+<div id="viewport"><div id="stage">
+
+<section class="slide title">
+  <h1>Learned 3D and 4D Reconstruction</h1>
+  <div class="sub">From Visual SLAM to Neural Fields and Gaussian Splatting</div>
+  <div class="who">Matouš Cejnek</div>
+  <div class="inst">Department of Instrumentation and Control Engineering<br>Faculty of Mechanical Engineering, CTU in Prague</div>
+  <div class="hint"><span class="kbd">→</span> <span class="kbd">Space</span> next step · <span class="kbd">←</span> back · <span class="kbd">F</span> fullscreen · <span class="kbd">O</span> overview · <span class="kbd">H</span> help</div>
+</section>
+
+<!-- ================================================================= part 1 -->
+<section class="slide" data-part="1"><h2>Why This Lecture</h2><div class="body">
+  <ul><li>Visual SLAM gave us camera poses and a sparse map — enough to localize, not enough to measure or render.</li>
+  <li>Learned methods fill in dense geometry and appearance, using the CNNs from lectures 1–2.</li>
+  <li>They also fail in new ways; we must learn to tell a pretty picture from a correct model.</li></ul>
+  <div class="viz" data-viz="goals3"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Roadmap</h2><div class="body">
+  <ul><li>We start from what the VSLAM block already provides.</li>
+  <li>Then representations, learned depth, NeRF, Gaussian splatting, and time.</li>
+  <li>The last part is about evaluating results honestly.</li></ul>
+  <div class="viz" data-viz="roadmap3"></div></div></section>
+
+<section class="slide" data-part="1"><h2>The Scene We Will Use</h2><div class="body">
+  <ul><li>One small workshop scene, rendered with exact geometry — so every error can be measured in millimetres.</li>
+  <li>It contains the typical troublemakers of real inspection scenes.</li>
+  <li>Every picture in this lecture is computed from it by real algorithms, not drawn.</li></ul>
+  <div class="viz" data-viz="sceneIntro"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Results First</h2><div class="body">
+  <ul><li>Where this lecture leads: three kinds of results from photographs.</li>
+  <li>Keep these pictures in mind — every part explains one of them.</li>
+  <li>The question is always <i>why</i> a method is used, and what it cannot do.</li></ul>
+  <div class="figrow">
+    <figure class="step"><img src="../assets/hero-depth.jpg" style="height:330px"><figcaption><b>dense depth</b><br>a distance for every pixel</figcaption></figure>
+    <figure class="step"><img src="../assets/tsdf-error.jpg" style="height:330px"><figcaption><b>a measured surface</b><br>coloured by its error in mm</figcaption></figure>
+    <figure class="step"><img src="../assets/gauss-fit-1200.jpg" style="height:280px"><figcaption><b>an image rebuilt from 1200 Gaussians</b><br>the idea behind Gaussian splatting</figcaption></figure>
+  </div></div></section>
+
+<section class="slide" data-part="1"><h2>What VSLAM Already Gives Us</h2><div class="body">
+  <ul><li>A trajectory of camera poses and keyframes in one consistent frame.</li>
+  <li>Sparse 3D landmarks: only well-matched feature points.</li>
+  <li>No dense surface, no appearance model — and with one camera, no metric scale.</li></ul>
+  <div class="viz" data-viz="vslamRecap"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Sparse Map versus Dense Depth</h2><div class="body">
+  <ul><li>Left: what a feature-based SLAM keeps — a few hundred well-matched points.</li>
+  <li>Right: what we want — a depth value for every pixel, including smooth and shiny parts.</li>
+  <li>Between them lies everything this lecture is about.</li></ul>
+  <div class="figrow">
+    <figure><img src="../assets/slam-sparse.jpg" style="height:390px"><figcaption><b>sparse:</b> ORB feature points, coloured by depth</figcaption></figure>
+    <figure class="step"><img src="../assets/hero-depth.jpg" style="height:390px"><figcaption><b>dense:</b> ground-truth depth of the same view</figcaption></figure>
+  </div></div></section>
+
+<section class="slide" data-part="1"><h2>What Reconstruction Should Deliver</h2><div class="body">
+  <ul><li>Geometry: where surfaces and occupied space are.</li>
+  <li>Appearance: how the scene looks from a given viewpoint, including reflections.</li>
+  <li>Dynamics: how geometry and appearance change over time.</li></ul>
+  <div class="viz" data-viz="reconGoals"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Machine Vision versus Computer Graphics</h2><div class="body">
+  <ul><li>Graphics wants images that look right.</li>
+  <li>Machine vision wants geometry that is right — in millimetres, with an uncertainty.</li>
+  <li>A photorealistic model can still have the wrong dimensions.</li></ul>
+  <div class="viz" data-viz="visionGraphics"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Recap: One Pixel Is a Ray</h2><div class="body">
+  <ul><li>Projection <span class="m">s</span> <b class="mb">u</b> = <b class="mb">K</b> [<b class="mb">R</b> | <b class="mb">t</b>] <b class="mb">X</b> maps a 3D point to a pixel.</li>
+  <li>Inverting it gives a ray, not a point: depth is lost.</li>
+  <li>Depth must come from more views, a sensor, or a learned prior.</li></ul>
+  <div class="viz" data-viz="rayAmbiguity"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Recap: Triangulation Needs Baseline</h2><div class="body">
+  <ul><li>Two rays from calibrated cameras intersect at the point.</li>
+  <li>Each ray is uncertain by a fraction of a pixel; the overlap of the two wedges is the uncertainty.</li>
+  <li>Small baseline or large depth: the overlap stretches along the viewing direction.</li></ul>
+  <div class="viz" data-viz="triangulation"></div></div></section>
+
+<section class="slide question" data-sub="From SLAM to measurement"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>Your monocular VSLAM map looks great. Can you measure the width of a part with it?</h3>
+  <div class="answer step">Not yet: the map is sparse (few points on the part) and its scale is arbitrary without a metric reference (known size, stereo, IMU, depth sensor).</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 2 -->
+<section class="slide" data-part="2"><h2>Six Ways to Represent the Same Object</h2><div class="body">
+  <ul><li>We use one running example: a cross-section of a flange (2D for clarity; the ideas are 3D).</li>
+  <li>Explicit: points, mesh, voxels, Gaussians. Implicit: fields queried at any point.</li>
+  <li>The choice decides what can be measured, rendered, and stored.</li></ul>
+  <div class="viz" data-viz="reprZoo"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Point Clouds</h2><div class="body">
+  <ul><li>A set of 3D points, optionally with colour and normal: what LiDAR and triangulation produce.</li>
+  <li>Simple and flexible, but no explicit surface and no inside/outside.</li>
+  <li>Only what a sensor saw is represented; gaps stay gaps.</li></ul>
+  <div class="viz" data-viz="pointCloud"></div></div></section>
+
+<section class="slide" data-part="2"><h2>A Real Point Cloud, Seen from Another Angle</h2><div class="body">
+  <ul><li>Depth from one stereo camera, turned into points and viewed from above.</li>
+  <li>Behind every object there is a shadow of missing data; the plain wall is gone entirely.</li>
+  <li>A single view is never enough — and points alone do not tell what is solid.</li></ul>
+  <div class="figrow">
+    <figure><img src="../assets/stereo-left.jpg" style="height:330px"><figcaption>what the camera saw</figcaption></figure>
+    <figure class="step"><img src="../assets/stereo-cloud-novel.jpg" style="height:330px"><figcaption>its point cloud from another viewpoint</figcaption></figure>
+  </div></div></section>
+
+<section class="slide" data-part="2"><h2>Meshes</h2><div class="body">
+  <ul><li>Vertices connected into triangles describe the surface explicitly.</li>
+  <li>The standard for measurement, collision checking, and classical rendering.</li>
+  <li>Hard to build directly from images; changing topology is difficult.</li></ul>
+  <div class="viz" data-viz="meshViz"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Voxel Grids</h2><div class="body">
+  <ul><li>A voxel is the 3D analogue of a pixel: a cell of a regular grid.</li>
+  <li>It can store occupancy, distance, colour, or a feature vector.</li>
+  <li>Memory grows with the cube of the resolution — try the slider.</li></ul>
+  <div class="viz" data-viz="voxelMem"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Occupancy Grids</h2><div class="body">
+  <ul><li>Each cell holds the probability that it is occupied.</li>
+  <li>Every measured ray updates two kinds of cells: those it passes (free) and the one it hits.</li>
+  <li>The standard map for robot navigation and planning.</li></ul>
+  <div class="viz" data-viz="occupancy"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Signed Distance and TSDF</h2><div class="body">
+  <ul><li>Each cell stores the distance to the nearest surface, negative inside.</li>
+  <li>The surface is where the distance is zero — sub-voxel accurate by interpolation.</li>
+  <li>TSDF keeps only a band around the surface and averages many depth maps (KinectFusion).</li></ul>
+  <div class="viz" data-viz="tsdf"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Fusing Many Noisy Depth Maps</h2><div class="body">
+  <ul><li>14 depth maps from different viewpoints, each with realistic sensor noise, fused into one TSDF.</li>
+  <li>Averaging over views removes most of the noise: the surface is smooth and closed where it was seen.</li>
+  <li>Right: the same surface coloured by its distance to the true object — the kind of map used in metrology.</li></ul>
+  <div class="figrow">
+    <figure><img src="../assets/tsdf-mesh.jpg" style="height:340px"><figcaption><b>fused surface</b> (shaded)</figcaption></figure>
+    <figure class="step"><img src="../assets/tsdf-error.jpg" style="height:380px"><figcaption><b>accuracy map:</b> green = within a fraction of a millimetre</figcaption></figure>
+  </div></div></section>
+
+<section class="slide deep" data-part="2"><h2>Sparse and Adaptive Grids</h2><div class="body">
+  <ul><li>Most of space is empty; storing it all wastes memory.</li>
+  <li>Quadtrees / octrees refine only where the surface is.</li>
+  <li>Hash grids map a huge virtual grid into a compact table (used again for fast NeRFs).</li></ul>
+  <div class="viz" data-viz="quadtree"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Implicit Neural Fields</h2><div class="body">
+  <ul><li>A neural network <span class="m">f</span>(<b class="mb">x</b>) returns occupancy or signed distance for any 3D point.</li>
+  <li>Continuous: no fixed resolution; the scene is stored in the network weights.</li>
+  <li>The price: every query is a network evaluation.</li></ul>
+  <div class="viz" data-viz="implicitField"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Radiance Fields: Colour Depends on Direction</h2><div class="body">
+  <ul><li>A radiance field returns density and colour for a position <i>and</i> a viewing direction.</li>
+  <li>It can model reflections and gloss that a single texture cannot.</li>
+  <li>It describes appearance — not automatically a surface.</li></ul>
+  <div class="viz" data-viz="radiance"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Gaussians as Primitives</h2><div class="body">
+  <ul><li>Cover the scene with many soft, oriented ellipsoids.</li>
+  <li>Each has a centre, a covariance, an opacity, and a colour.</li>
+  <li>Explicit like a point cloud, but continuous and fast to render.</li></ul>
+  <div class="viz" data-viz="gaussFitViz"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Which Representation for Which Job?</h2><div class="body">
+  <div class="viz" data-viz="rowSteps" style="flex-direction:column">
+  <table class="t">
+    <thead><tr><th>representation</th><th>measure dimensions</th><th>plan / collide</th><th>render new views</th><th>memory</th></tr></thead>
+    <tbody>
+      <tr><td>point cloud</td><td>roughly</td><td>with effort</td><td>poorly</td><td>moderate</td></tr>
+      <tr><td>mesh</td><td><b>yes</b></td><td><b>yes</b></td><td>yes (with textures)</td><td>small</td></tr>
+      <tr><td>occupancy / voxels</td><td>at grid resolution</td><td><b>yes</b></td><td>poorly</td><td>large (cubic)</td></tr>
+      <tr><td>SDF / TSDF</td><td><b>yes</b> (zero level)</td><td><b>yes</b></td><td>via mesh</td><td>large, sparse helps</td></tr>
+      <tr><td>radiance field (NeRF)</td><td>indirectly</td><td>indirectly</td><td><b>yes</b></td><td>small (weights)</td></tr>
+      <tr><td>3D Gaussians</td><td>with care</td><td>indirectly</td><td><b>yes, real time</b></td><td>large</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:22px;color:var(--muted);margin-top:24px">Choose by the downstream task. Conversions are possible (field → mesh, Gaussians → surface), but each one adds error.</p>
+  </div></div></section>
+
+<section class="slide question" data-sub="Choose a representation"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>You must (a) check a hole tolerance, (b) plan a robot path, (c) show a customer the line from new viewpoints. Which representation for each?</h3>
+  <div class="answer step">(a) a mesh or SDF validated against ground truth; (b) an occupancy grid; (c) a radiance field or Gaussian splats.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 3 -->
+<section class="slide" data-part="3"><h2>The Classical Dense Pipeline</h2><div class="body">
+  <ul><li>Poses from SLAM/SfM, then a depth map for each view, then fusion into one model.</li>
+  <li>The depth-map step is where most errors appear.</li>
+  <li>It is also where learned matching helps most.</li></ul>
+  <div class="viz" data-viz="densePipe"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Where Classical Matching Fails</h2><div class="body">
+  <ul><li>Matching compares small patches along the epipolar line and picks the lowest cost.</li>
+  <li>Textureless or repetitive regions give flat or periodic cost curves: no clear answer.</li>
+  <li>Learned features use context (lecture 2) and produce one clear minimum.</li></ul>
+  <div class="viz" data-viz="matchingCost"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Stereo: Depth from Disparity</h2><div class="body">
+  <ul><li>For a rectified pair, depth is inversely proportional to disparity: <span class="m">Z</span> = <span class="m">f B</span> / <span class="m">d</span>.</li>
+  <li>A fixed matching error in pixels becomes a depth error growing with <span class="m">Z</span>².</li>
+  <li>Better matching (learning) helps, but baseline and focal length set the limits.</li></ul>
+  <div class="viz" data-viz="disparity"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Classical Stereo on Our Scene</h2><div class="body">
+  <ul><li>Two cameras 6 cm apart; a classical matcher (OpenCV SGBM) finds the disparity for every pixel.</li><li>Black = no reliable match. The plain wall and the shiny metal are mostly missing.</li><li>Where it does match, the depth is good: median error 3 mm.</li></ul>
+  <div class="figrow"><figure><img src="../assets/stereo-left.jpg" style="height:300px"><figcaption><b>left image</b> (right camera 6 cm aside)</figcaption></figure><figure class="step"><img src="../assets/sgbm-depth.jpg" style="height:340px"><figcaption><b>depth from stereo matching</b></figcaption></figure></div></div></section>
+<section class="slide" data-part="3"><h2>Where Stereo Is Wrong</h2><div class="body">
+  <ul><li>The same result coloured by its error against the true depth, in millimetres.</li><li>Red regions are exactly the troublemakers: textureless wall, repetitive checkerboard, object edges.</li><li>This is why learned matching exists: it uses context to fill and fix these areas.</li></ul>
+  <div class="figrow"><figure><img src="../assets/stereo-left.jpg" style="height:300px"><figcaption>input</figcaption></figure><figure class="step"><img src="../assets/sgbm-error.jpg" style="height:360px"><figcaption><b>error map:</b> green ≤ 5 mm, dark red ≥ 20 mm</figcaption></figure></div></div></section>
+
+<section class="slide" data-part="3"><h2>The Cost Volume</h2><div class="body">
+  <ul><li>For every pixel and every candidate disparity, store how well the two images match.</li>
+  <li>The result is a 3D tensor: height × width × disparity.</li>
+  <li>The best disparity of a pixel is the minimum along its column.</li></ul>
+  <div class="viz" data-viz="costVolume"></div></div></section>
+
+<section class="slide" data-part="3"><h2>A Learned Stereo Network</h2><div class="body">
+  <ul><li>A shared CNN extracts features from both images.</li>
+  <li>Features are compared at each disparity to build a cost volume; 3D convolutions clean it up.</li>
+  <li>A differentiable readout turns it into a disparity map.</li></ul>
+  <div class="viz" data-viz="stereoNet"></div></div></section>
+
+<section class="slide deep" data-part="3"><h2>Soft-Argmin: A Differentiable Minimum</h2><div class="body">
+  <ul><li>A hard argmin has no useful gradient and is limited to whole disparities.</li>
+  <li>Softmax over negative costs gives a probability per disparity.</li>
+  <li>The expected disparity is sub-pixel and can be trained end to end.</li></ul>
+  <div class="viz" data-viz="softArgmin"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Multi-View Stereo: The Plane Sweep</h2><div class="body">
+  <ul><li>Hypothesize planes at many depths in front of the reference camera.</li>
+  <li>Project the other views onto each plane and measure how much they disagree.</li>
+  <li>At the true depth all views agree — the minimum of the curve.</li></ul>
+  <div class="viz" data-viz="planeSweep"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Learned Multi-View Stereo</h2><div class="body">
+  <ul><li>MVSNet-style networks do the plane sweep on CNN features instead of pixels.</li>
+  <li>The variance across views forms a cost volume; a 3D CNN regularizes it.</li>
+  <li>Output: a depth map with a confidence map, for every reference view.</li></ul>
+  <div class="viz" data-viz="mvsnet"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Monocular Depth and the Scale Problem</h2><div class="body">
+  <ul><li>A network can predict depth from one image using learned priors about the world.</li>
+  <li>Geometry alone cannot tell a toy from a house: the scale is ambiguous.</li>
+  <li>Good relative depth is not yet a metric reconstruction.</li></ul>
+  <div class="viz" data-viz="monoScale"></div></div></section>
+
+<section class="slide" data-part="3"><h2>A Depth Network Sees One Photo</h2><div class="body">
+  <ul><li>A pretrained network (Depth Anything V2) predicts depth from the left image alone.</li><li>No holes, sharp object outlines, even the plain wall — learned from millions of photos.</li><li>But the output has no unit: it is only relative depth.</li></ul>
+  <div class="figrow"><figure><img src="../assets/stereo-left.jpg" style="height:300px"><figcaption>one input image</figcaption></figure><figure class="step"><img src="../assets/mono-raw.jpg" style="height:340px"><figcaption><b>network output:</b> dense, but without scale</figcaption></figure></div></div></section>
+
+<section class="slide" data-part="3"><h2>Fixing Scale with SLAM Points</h2><div class="body">
+  <ul><li>VSLAM landmarks give a few reliable depths in each keyframe.</li>
+  <li>Fit a scale and shift between network depth and landmark depth.</li>
+  <li>Dense learned depth then inherits the scale of the SLAM map.</li></ul>
+  <div class="viz" data-viz="scaleAlign"></div></div></section>
+
+<section class="slide" data-part="3"><h2>After Scaling: Complete, but Less Accurate</h2><div class="body">
+  <ul><li>Scaled with the sparse SLAM points, every pixel gets a depth in centimetres.</li><li>Compare: stereo has holes but ≈ 3 mm error; the network is complete but ≈ 12 mm off.</li><li>Typical practice: learned depth for completeness, geometry for accuracy — often combined.</li></ul>
+  <div class="figrow"><figure><img src="../assets/sgbm-error.jpg" style="height:300px"><figcaption><b>stereo:</b> holes, accurate where valid (0–20 mm)</figcaption></figure><figure class="step"><img src="../assets/mono-error.jpg" style="height:300px"><figcaption><b>network + scale:</b> no holes, larger errors (0–60 mm)</figcaption></figure></div></div></section>
+
+<section class="slide question" data-sub="Stereo accuracy"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>Your stereo depth is accurate at 1 m but poor at 8 m. Why, and what would help?</h3>
+  <div class="answer step">The error grows with <span class="m">Z</span>²/(<span class="m">f B</span>): 64 × worse at 8 m. Increase the baseline or focal length, use more views (MVS), or move the camera closer.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 4 -->
+<section class="slide" data-part="4"><h2>From Depth Maps to One Scene Function</h2><div class="body">
+  <ul><li>MVS estimates a depth map per view and fuses them afterwards.</li>
+  <li>A neural field instead optimizes one function for the whole scene.</li>
+  <li>A rendering loss ties every pixel of every camera to that single model.</li></ul>
+  <div class="viz" data-viz="mvsToField"></div></div></section>
+
+<section class="slide" data-part="4"><h2>What a NeRF Needs: Many Photos with Known Poses</h2><div class="body">
+  <ul><li>Typically 50–200 photos around the object; here 14 for illustration.</li><li>The pose of every photo must be known — from VSLAM or structure from motion.</li><li>Output: a model that renders the scene from any viewpoint between these cameras.</li></ul>
+  <div class="figrow"><figure><img src="../assets/train-grid.jpg" style="height:330px"><figcaption><b>training images</b> from two rings of camera positions</figcaption></figure></div></div></section>
+
+<section class="slide" data-part="4"><h2>NeRF: What Goes In and What Comes Out</h2><div class="body">
+  <ul><li>For a pixel, the pose and intrinsics give a ray; we sample points along it.</li>
+  <li>An MLP maps each sample's position and the ray direction to density and colour.</li>
+  <li>Volume rendering turns the samples into one pixel colour, compared with the photo.</li></ul>
+  <div class="viz" data-viz="nerfIO"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Why NeRF Needs a Trick for Detail</h2><div class="body">
+  <ul><li>We trained the same small network to reproduce the photo from pixel coordinates.</li>
+  <li>Fed raw (<span class="m">x</span>, <span class="m">y</span>), it only learns a blurry image. Fed sines and cosines of the coordinates, it learns every edge.</li>
+  <li>NeRF uses the same trick in 3D — without it, the scene would be blurry.</li></ul>
+  <div class="figrow"><figure><img src="../assets/posenc-L0.jpg" style="height:280px"><figcaption><b>raw coordinates</b> · PSNR 23 dB</figcaption></figure><figure class="step"><img src="../assets/posenc-L8.jpg" style="height:280px"><figcaption><b>with positional encoding</b> · PSNR 43 dB</figcaption></figure><figure class="step"><img src="../assets/posenc-target.jpg" style="height:280px"><figcaption>target photo</figcaption></figure></div></div></section>
+<section class="slide deep" data-part="4"><h2>Positional Encoding</h2><div class="body">
+  <ul><li>MLPs fed raw coordinates learn only smooth, blurry functions.</li>
+  <li>Encoding each coordinate with sines and cosines of rising frequency exposes fine detail.</li>
+  <li>Move the slider: the same fitting problem with more frequencies.</li></ul>
+  <div class="viz" data-viz="posEnc"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Volume Rendering Along a Ray</h2><div class="body">
+  <ul><li>Density says how likely the ray is to stop at each sample.</li>
+  <li>Transmittance says how much light is still unblocked; it only decreases.</li>
+  <li>Weights = transmittance × opacity peak at the first surface; they mix the colours.</li></ul>
+  <div class="viz" data-viz="volRender"></div></div></section>
+
+<section class="slide deep" data-part="4"><h2>Rendering, Number by Number</h2><div class="body">
+  <ul><li>Discrete form: <span class="m">Ĉ</span> = Σ <span class="m">T</span><sub>i</sub> <span class="m">α</span><sub>i</sub> <span class="m">c</span><sub>i</sub>, with <span class="m">α</span><sub>i</sub> = 1 − e<sup>−σ<sub>i</sub>δ</sup> and <span class="m">T</span><sub>i</sub> = Π<sub>j&lt;i</sub>(1 − <span class="m">α</span><sub>j</sub>).</li>
+  <li>Every step is differentiable, so the photo loss trains density and colour.</li>
+  <li>Four samples, computed column by column.</li></ul>
+  <div class="viz" data-viz="renderTable"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Training a NeRF</h2><div class="body">
+  <ul><li>Each iteration draws a random batch of rays from all training images.</li>
+  <li>Render them, compare with the observed pixels, back-propagate into the MLP.</li>
+  <li>This is optimization of one scene, not learning that generalizes to other scenes.</li></ul>
+  <div class="viz" data-viz="nerfTrain"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Which Parts Did the Cameras Actually See?</h2><div class="body">
+  <ul><li>Each surface point coloured by how many training photos show it.</li><li>Green: seen often — the model is well constrained. Red: seen once or never.</li><li>Behind the box and under objects, any method can only guess.</li></ul>
+  <div class="figrow"><figure><img src="../assets/coverage.jpg" style="height:380px"><figcaption><b>coverage map</b> of the 14 training views, seen from above</figcaption></figure></div></div></section>
+
+<section class="slide deep" data-part="4"><h2>Coarse-to-Fine Sampling</h2><div class="body">
+  <ul><li>Uniform samples waste most evaluations on empty space.</li>
+  <li>A coarse pass estimates the weights along the ray.</li>
+  <li>Fine samples are drawn where the weights are high — near the surface.</li></ul>
+  <div class="viz" data-viz="hierSampling"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Where NeRF Works — and Where It Breaks</h2><div class="body">
+  <ul><li>New views between the training cameras are interpolated very well.</li>
+  <li>Outside the camera coverage the model guesses: floaters and invented content.</li>
+  <li>Few views or wrong poses make it worse.</li></ul>
+  <div class="viz" data-viz="coverage"></div></div></section>
+
+<section class="slide" data-part="4"><h2>A New Viewpoint: What Is Known, What Is Not</h2><div class="body">
+  <ul><li>The scene from a new side, outside the ring of training cameras.</li><li>Left: everything the photos actually observed, re-projected. Right: the truth.</li><li>A NeRF must fill the black gaps — that is where floaters and invented content appear.</li></ul>
+  <div class="figrow"><figure><img src="../assets/novel-known.jpg" style="height:330px"><figcaption><b>observed data</b> from the new viewpoint</figcaption></figure><figure class="step"><img src="../assets/novel-truth.jpg" style="height:330px"><figcaption><b>true view</b> (never photographed)</figcaption></figure></div></div></section>
+
+<section class="slide deep" data-part="4"><h2>Making NeRF Fast: Hash Grids</h2><div class="body">
+  <ul><li>The original NeRF took hours to days per scene.</li>
+  <li>Instant-NGP stores learnable features in multi-resolution hash grids (Part 2).</li>
+  <li>A tiny MLP reads the interpolated features: training in minutes.</li></ul>
+  <div class="viz" data-viz="hashGrid"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Depth and Geometry from a NeRF</h2><div class="body">
+  <ul><li>Expected depth along a ray: the weighted mean of sample depths.</li>
+  <li>A mesh can be extracted from a density threshold — but the threshold is arbitrary.</li>
+  <li>Floaters pull depth into empty space; SDF-based fields give cleaner surfaces.</li></ul>
+  <div class="viz" data-viz="nerfDepth"></div></div></section>
+
+<section class="slide question" data-sub="NeRF for metrology"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>Your NeRF reaches a high PSNR on test views. Does that prove the part's dimensions are correct?</h3>
+  <div class="answer step">No. PSNR measures image agreement. Dimensions need geometric ground truth, calibration, errors in millimetres, and an uncertainty — and only where the part was observed.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 5 -->
+<section class="slide" data-part="5"><h2>Why Gaussian Splatting?</h2><div class="body">
+  <ul><li>NeRF evaluates a network hundreds of times per pixel.</li>
+  <li>3D Gaussian splatting (2023) stores explicit primitives and rasterizes them.</li>
+  <li>Same training data (posed images), similar quality, real-time rendering.</li></ul>
+  <div class="viz" data-viz="whyGS"></div></div></section>
+
+<section class="slide" data-part="5"><h2>The Idea in 2D: Rebuild a Photo from Blobs</h2><div class="body">
+  <ul><li>Here we actually optimized coloured 2D Gaussians to reproduce the photo (gradient descent, as in lecture 1).</li><li>Few blobs: a blurry impression. More blobs: detail appears where the image needs it.</li><li>3D Gaussian splatting does the same in 3D, with many photos at once.</li></ul>
+  <div class="figrow"><figure><img src="../assets/gauss-fit-30.jpg" style="height:240px"><figcaption><b>30</b> Gaussians · 22 dB</figcaption></figure><figure class="step"><img src="../assets/gauss-fit-200.jpg" style="height:240px"><figcaption><b>200</b> Gaussians · 25 dB</figcaption></figure><figure class="step"><img src="../assets/gauss-fit-1200.jpg" style="height:240px"><figcaption><b>1200</b> Gaussians · 32 dB</figcaption></figure><figure class="step"><img src="../assets/gauss-target.jpg" style="height:240px"><figcaption>target photo</figcaption></figure></div></div></section>
+
+<section class="slide" data-part="5"><h2>One 3D Gaussian</h2><div class="body">
+  <ul><li>Centre <b class="mb">μ</b>, covariance <b class="mb">Σ</b> (size and orientation), opacity α, view-dependent colour.</li>
+  <li><b class="mb">Σ</b> is built from a rotation and three scales, so it stays valid during optimization.</li>
+  <li>Try the sliders: anisotropy lets one Gaussian cover a thin edge.</li></ul>
+  <div class="viz" data-viz="gaussParams"></div></div></section>
+
+<section class="slide deep" data-part="5"><h2>From 3D Ellipsoid to 2D Splat</h2><div class="body">
+  <ul><li>Each Gaussian is projected into the image as a 2D Gaussian (the splat).</li>
+  <li>Its 2D covariance follows from the camera pose and the local linearization of the projection.</li>
+  <li>Farther Gaussians make smaller splats.</li></ul>
+  <div class="viz" data-viz="projectGauss"></div></div></section>
+
+<section class="slide deep" data-part="5"><h2>Blending Splats</h2><div class="body">
+  <ul><li>Splats covering a pixel are sorted by depth.</li>
+  <li>They are composited front to back with their opacities.</li>
+  <li>It is exactly NeRF's rendering formula — with explicit primitives instead of samples.</li></ul>
+  <div class="viz" data-viz="alphaBlend"></div></div></section>
+
+<section class="slide" data-part="5"><h2>The Optimization Loop</h2><div class="body">
+  <ul><li>Start from the sparse SfM/SLAM points: one Gaussian per point.</li>
+  <li>Render a training view, compare with the photo, update every parameter by gradient descent.</li>
+  <li>Periodically add and remove Gaussians.</li></ul>
+  <div class="viz" data-viz="gsPipeline"></div></div></section>
+
+<section class="slide deep" data-part="5"><h2>Adding and Removing Gaussians</h2><div class="body">
+  <ul><li>Where the image error stays high, small Gaussians are cloned and large ones split.</li>
+  <li>Nearly transparent Gaussians are pruned.</li>
+  <li>The number of primitives adapts to the detail of the scene (often millions).</li></ul>
+  <div class="viz" data-viz="densify"></div></div></section>
+
+<section class="slide" data-part="5"><h2>3DGS versus NeRF</h2><div class="body">
+  <div class="viz" data-viz="rowSteps" style="flex-direction:column">
+  <table class="t">
+    <thead><tr><th></th><th>NeRF (+ hash grids)</th><th>3D Gaussian splatting</th></tr></thead>
+    <tbody>
+      <tr><td>scene stored as</td><td>network weights / feature grids</td><td>millions of explicit primitives</td></tr>
+      <tr><td>rendering</td><td>ray marching, many queries</td><td>rasterization, real time</td></tr>
+      <tr><td>memory</td><td>small</td><td>large (hundreds of MB)</td></tr>
+      <tr><td>editing</td><td>hard</td><td>easy: move, delete primitives</td></tr>
+      <tr><td>geometry</td><td>density threshold or SDF variant</td><td>needs surface-aligned variant</td></tr>
+      <tr><td>both</td><td colspan="2">need calibrated, posed images and good coverage; optimize image agreement</td></tr>
+    </tbody>
+  </table>
+  </div></div></section>
+
+<section class="slide" data-part="5"><h2>Geometry from Gaussians</h2><div class="body">
+  <ul><li>Gaussian centres are not surface samples; blobs can explain images without a clean surface.</li>
+  <li>Surface-aligned variants (2DGS, SuGaR) flatten the Gaussians onto the surface.</li>
+  <li>Then depth and meshes can be extracted — and must still be validated.</li></ul>
+  <div class="viz" data-viz="gsGeometry"></div></div></section>
+
+<section class="slide question" data-sub="Gaussians as measurements"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>Can you export the Gaussian centres as a point cloud and measure the part on it?</h3>
+  <div class="answer step">Not directly: centres sit inside the object and spread with the primitives' size. Use a surface-aligned variant or extract a surface, then compare with ground truth.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 6 -->
+<section class="slide" data-part="6"><h2>Who Moved: the Camera or the Scene?</h2><div class="body">
+  <ul><li>A dynamic scene is a function of position <i>and</i> time.</li>
+  <li>From images alone, camera motion and object motion can explain the same change.</li>
+  <li>Each time instant is usually seen from only a few views.</li></ul>
+  <div class="viz" data-viz="dynAmbiguity"></div></div></section>
+
+<section class="slide" data-part="6"><h2>Moving Objects Break Simple Cameras</h2><div class="body">
+  <ul><li>The flange rotates during the exposure. Same scene, three cameras.</li><li>Long exposure smears it; a rolling-shutter camera reads rows at different times and bends it.</li><li>A 3D method fed with these images reconstructs the smear or the bend as if it were real.</li></ul>
+  <div class="figrow"><figure><img src="../assets/dyn-still.jpg" style="height:250px"><figcaption><b>global shutter, short exposure</b></figcaption></figure><figure class="step"><img src="../assets/dyn-blur.jpg" style="height:250px"><figcaption><b>long exposure:</b> motion blur</figcaption></figure><figure class="step"><img src="../assets/dyn-rolling.jpg" style="height:250px"><figcaption><b>rolling shutter:</b> skewed shape</figcaption></figure></div></div></section>
+
+<section class="slide" data-part="6"><h2>Canonical Space plus Deformation</h2><div class="body">
+  <ul><li>Store the scene once, in a canonical (reference) configuration.</li>
+  <li>A deformation field moves every point to its position at time <span class="m">t</span>.</li>
+  <li>Structure is shared over time; topology changes (cutting, opening) remain hard.</li></ul>
+  <div class="viz" data-viz="canonical"></div></div></section>
+
+<section class="slide" data-part="6"><h2>4D Gaussian Splatting</h2><div class="body">
+  <ul><li>Each Gaussian gets a time-dependent position, and possibly shape and colour.</li>
+  <li>Motion is modelled by a small network, by trajectories, or by a time basis.</li>
+  <li>Rendering at any time stays a fast splat.</li></ul>
+  <div class="viz" data-viz="gauss4d"></div></div></section>
+
+<section class="slide" data-part="6"><h2>Temporal Regularization</h2><div class="body">
+  <ul><li>Few observations per instant make motion estimates noisy.</li>
+  <li>Smoothness over time suppresses jitter and flicker.</li>
+  <li>Too much smoothing removes real events: contacts, impacts, sudden stops.</li></ul>
+  <div class="viz" data-viz="smoothing"></div></div></section>
+
+<section class="slide" data-part="6"><h2>Capture: Synchronization Matters</h2><div class="body">
+  <ul><li>Several synchronized cameras are worth more than a better model.</li>
+  <li>An unsynchronized camera sees moving objects at the wrong place.</li>
+  <li>Short exposure limits motion blur; coverage in space and time limits guessing.</li></ul>
+  <div class="viz" data-viz="sync"></div></div></section>
+
+<section class="slide question" data-sub="4D capture"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>You want a 4D model of a robot arm moving at 2 m/s with 5 mm accuracy. What do you require from the camera setup?</h3>
+  <div class="answer step">Hardware-synchronized cameras (offset well below 2.5 ms), short exposure, enough views around the arm, and calibrated poses — before choosing any 4D method.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 7 -->
+<section class="slide" data-part="7"><h2>Evaluating New Views</h2><div class="body">
+  <ul><li>PSNR measures pixel error, SSIM local structure, LPIPS perceptual similarity (a network).</li>
+  <li>Always evaluate on cameras held out from training.</li>
+  <li>Pixel metrics are very sensitive to tiny misalignment and exposure changes.</li></ul>
+  <div class="viz" data-viz="psnr"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Evaluating Geometry</h2><div class="body">
+  <ul><li>Accuracy: how far reconstructed points are from the truth (false surface).</li>
+  <li>Completeness: how much of the true surface was reconstructed (missing surface).</li>
+  <li>Chamfer distance averages both; the F-score reports both at a tolerance τ.</li></ul>
+  <div class="viz" data-viz="chamfer"></div></div></section>
+
+<section class="slide" data-part="7"><h2>A Small Pose Error, a Visible Shape Error</h2><div class="body">
+  <ul><li>The same 14 depth maps fused twice; in the second run, three camera poses are off by about 4°.</li><li>The table (seen the same way by all cameras) stays green; edges and curved objects turn red.</li><li>Such maps are how calibration and pose problems are found in practice.</li></ul>
+  <div class="figrow"><figure><img src="../assets/tsdf-error.jpg" style="height:330px"><figcaption><b>correct poses</b> (0–4 mm)</figcaption></figure><figure class="step"><img src="../assets/tsdf-error-poseerr.jpg" style="height:330px"><figcaption><b>3 poses off by ≈ 4°</b></figcaption></figure></div></div></section>
+
+<section class="slide" data-part="7"><h2>Uncertainty and Coverage</h2><div class="body">
+  <ul><li>Aleatoric uncertainty: sensor noise and ambiguity in what was observed.</li>
+  <li>Epistemic uncertainty: what the data never constrained — the model's guess.</li>
+  <li>A reconstruction without a confidence map is incomplete for decisions.</li></ul>
+  <div class="viz" data-viz="uncertainty"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Typical Failures</h2><div class="body">
+  <ul><li>Each failure has a physical cause, not only a model cause.</li>
+  <li>Most can be detected by checking geometry against a reference.</li>
+  <li>The last one is the most dangerous: the result looks plausible.</li></ul>
+  <div class="viz" data-viz="failures"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Applications in Machine Vision</h2><div class="body">
+  <ul><li>Dense 3D models connect perception with simulation, robotics, and inspection.</li>
+  <li>The required quality depends on the application.</li>
+  <li>Decide the quality measure before choosing the method.</li></ul>
+  <div class="viz" data-viz="applications"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Choosing a Pipeline</h2><div class="body">
+  <ul><li>Start from the data you have and the output you need.</li>
+  <li>The simplest pipeline that meets the requirement wins.</li>
+  <li>The checks at the end are not optional.</li></ul>
+  <div class="viz" data-viz="choosePipe"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Coupling with VSLAM</h2><div class="body">
+  <ul><li>VSLAM provides poses, intrinsics, and seed points for NeRF and 3DGS.</li>
+  <li>Refining poses together with the scene can remove small errors.</li>
+  <li>It can also absorb a pose error into a deformed scene — check the poses separately.</li></ul>
+  <div class="viz" data-viz="slamCoupling"></div></div></section>
+
+<section class="slide" data-part="7"><h2>A Safe Workflow</h2><div class="body">
+  <ul><li>Verify calibration and poses before anything learned.</li>
+  <li>Keep a classical baseline to compare against.</li>
+  <li>Report geometric error and uncertainty on data the method has not seen.</li></ul>
+  <div class="viz" data-viz="safeFlow"></div></div></section>
+
+<section class="slide question" data-sub="Experiment design"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>How do you show that a reconstruction is correct, not just a good-looking rendering?</h3>
+  <div class="answer step">Hold out views for image metrics, compare geometry with an independent reference in millimetres (accuracy, completeness, F-score), and mark regions that were never observed.</div></div><div class="qmark">?</div></div></section>
+
+<section class="slide" data-part="7"><h2>What to Remember</h2><div class="body">
+  <ul><li>The representation decides what can be measured and what it costs.</li>
+  <li>NeRF and 3DGS optimize agreement with images, not automatically correct surfaces.</li>
+  <li>Time adds ambiguity and strict capture requirements.</li></ul>
+  <div class="viz" data-viz="summary3"></div></div></section>
+
+<section class="slide question" data-sub="Three questions for every reconstruction"><h2>Closing</h2><div class="body">
+  <div class="q"><h3>What output does the next algorithm actually need?<br>Which part of the result is measured, and which is prior?<br>Where — and in which units — can we verify it?</h3></div><div class="qmark">?</div></div></section>
+
+<div id="footer"></div><div id="stepdots"></div><div id="progress"></div>
+</div></div>
+
+<div id="overview"></div>
+<div id="help"><b>Keys</b><br>
+→ / Space / PageDown / click — next step<br>
+← / PageUp — previous step<br>
+Shift + → / ← — skip to next / previous slide<br>
+F — fullscreen · O — overview · R — restart slide<br>
+type a number + Enter — go to slide<br>
+python shared/export_pdf.py all — PDF of every lecture</div>
+</body>
+</html>

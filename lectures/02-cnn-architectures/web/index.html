@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CNN Architectures — Slides</title>
+<link rel="stylesheet" href="../../shared/deck.css">
+<script>window.DECK_PARTS = ["", "Part 1 · One network, many tasks", "Part 2 · Backbones", "Part 3 · Heads",
+  "Part 4 · Detection", "Part 5 · Multi-scale necks", "Part 6 · Segmentation", "Part 7 · Attention and design"];</script>
+<script src="../../shared/deck.js"></script>
+<script src="../../shared/kit.js"></script>
+<script src="vizA.js"></script>
+<script src="vizB.js"></script>
+<script src="vizC.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="ah-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0070ba"/></marker>
+  <marker id="ah-blue-s" viewBox="0 0 10 10" refX="3" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0070ba"/></marker>
+  <marker id="ah-magenta" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c2187a"/></marker>
+  <marker id="ah-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2e7d3a"/></marker>
+  <marker id="ah-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b3261e"/></marker>
+  <marker id="ah-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c46a00"/></marker>
+  <marker id="ah-muted" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#687178"/></marker>
+</defs></svg>
+
+<div id="viewport"><div id="stage">
+
+<section class="slide title">
+  <h1>CNN Architectures</h1>
+  <div class="sub">Backbones, Necks, and Heads for Machine Vision</div>
+  <div class="who">Matouš Cejnek</div>
+  <div class="inst">Department of Instrumentation and Control Engineering<br>Faculty of Mechanical Engineering, CTU in Prague</div>
+  <div class="hint"><span class="kbd">→</span> <span class="kbd">Space</span> next step · <span class="kbd">←</span> back · <span class="kbd">F</span> fullscreen · <span class="kbd">O</span> overview · <span class="kbd">H</span> help</div>
+</section>
+
+<!-- ================================================================= part 1 -->
+<section class="slide" data-part="1"><h2>Why This Lecture</h2><div class="body">
+  <ul><li>Lecture 1 built one small CNN for one task. Real systems reuse a few proven designs.</li>
+  <li>The goal is to read an architecture as tensors flowing through named blocks.</li>
+  <li>By the end, you can choose a backbone, neck, and head for a given vision problem.</li></ul>
+  <div class="viz" data-viz="goals2"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Roadmap</h2><div class="body">
+  <ul><li>Seven parts: the system view first, then each building block, then design decisions.</li>
+  <li>Every block is introduced through the problem it solves.</li>
+  <li>Check questions close each part.</li></ul>
+  <div class="viz" data-viz="roadmap2"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Recap: What a CNN Already Does</h2><div class="body">
+  <ul><li>Stacked conv blocks lower the resolution and raise the number of channels.</li>
+  <li>Strides 4, 8, 16, 32 give feature maps at several scales — but we used only the last one.</li>
+  <li>A small head (GAP + linear) turned the last map into class scores.</li></ul>
+  <div class="viz" data-viz="recap2"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Four Tasks, Four Output Shapes</h2><div class="body">
+  <ul><li>The same image can be asked four different questions.</li>
+  <li>Each answer has a different tensor shape — detection even a variable length.</li>
+  <li>The architecture must produce exactly that shape.</li></ul>
+  <div class="viz" data-viz="tasks2"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Do Not Train Everything From Scratch</h2><div class="body">
+  <ul><li>A deep feature extractor needs a lot of data and compute to train well.</li>
+  <li>Good features (edges, textures, parts) are useful for almost every visual task.</li>
+  <li>So we train it once on a large dataset and reuse it; only the task-specific part is new.</li></ul>
+  <div class="viz" data-viz="reuse"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Backbone, Neck, Head</h2><div class="body">
+  <ul><li>Backbone: generic feature extractor, usually pretrained.</li>
+  <li>Neck: optionally fuses maps of different scales.</li>
+  <li>Head: turns features into the required output structure.</li></ul>
+  <div class="viz" data-viz="bnh"></div></div></section>
+
+<section class="slide" data-part="1"><h2>Feature Levels and Strides</h2><div class="body">
+  <ul><li>A backbone exposes several maps, named by stage: C2 … C5.</li>
+  <li>Stride = how many input pixels one cell of the map corresponds to.</li>
+  <li>Fine levels keep small details; coarse levels see large context.</li></ul>
+  <div class="viz" data-viz="strides"></div></div></section>
+
+<section class="slide question" data-sub="Think about blocks"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>You switch from classifying parts to segmenting their defects. Which blocks change?</h3>
+  <div class="answer step">The head certainly (scores → per-pixel mask), usually also the neck (fine levels are needed). The pretrained backbone can stay.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 2 -->
+<section class="slide" data-part="2"><h2>Seven Years of Backbones</h2><div class="body">
+  <ul><li>Accuracy rose by 20 points; compute first exploded, then dropped below AlexNet.</li>
+  <li>Each step solved a concrete problem: depth, optimization, cost.</li>
+  <li>We follow that story: VGG → Inception → ResNet → DenseNet → MobileNet → EfficientNet.</li></ul>
+  <div class="viz" data-viz="timeline"></div></div></section>
+
+<section class="slide" data-part="2"><h2>VGG: One Block, Repeated</h2><div class="body">
+  <ul><li>Five stages of identical 3 × 3 convolutions, each followed by 2 × 2 max pooling.</li>
+  <li>Very regular and easy to read — still a good mental model.</li>
+  <li>Its weakness is the end: three huge fully connected layers.</li></ul>
+  <div class="viz" data-viz="vgg"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Why Only 3 × 3 Kernels?</h2><div class="body">
+  <ul><li>Two stacked 3 × 3 layers see the same 5 × 5 region as one 5 × 5 layer (lecture 1).</li>
+  <li>They need 28 % fewer weights and add a second nonlinearity.</li>
+  <li>Three 3 × 3 layers replace a 7 × 7 in the same way.</li></ul>
+  <div class="viz" data-viz="two3x3"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Where VGG's Parameters Are</h2><div class="body">
+  <ul><li>The convolutions hold only 15 M of 138 M parameters.</li>
+  <li>The first dense layer alone (7 · 7 · 512 → 4096) holds 103 M.</li>
+  <li>Later networks replace it with global average pooling — the head from lecture 1.</li></ul>
+  <div class="viz" data-viz="vggParams"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Inception: Several Kernel Sizes at Once</h2><div class="body">
+  <ul><li>Objects appear at different sizes; which kernel size is right is not known in advance.</li>
+  <li>Inception runs 1 × 1, 3 × 3, 5 × 5, and pooling branches in parallel on the same input.</li>
+  <li>The results are concatenated along the channel axis.</li></ul>
+  <div class="viz" data-viz="inception"></div></div></section>
+
+<section class="slide" data-part="2"><h2>The 1 × 1 Reduction Trick</h2><div class="body">
+  <ul><li>A 5 × 5 convolution on 192 channels is expensive.</li>
+  <li>A 1 × 1 convolution first reduces the channels (lecture 1: it mixes channels cheaply).</li>
+  <li>The same output costs about ten times less.</li></ul>
+  <div class="viz" data-viz="reduce"></div></div></section>
+
+<section class="slide question" data-sub="Parallel branches"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>When does processing several kernel sizes in parallel pay off?</h3>
+  <div class="answer step">When relevant structures have very different sizes within one image and a single kernel size would cover them poorly.</div></div><div class="qmark">?</div></div></section>
+
+<section class="slide" data-part="2"><h2>Deeper Is Not Automatically Better</h2><div class="body">
+  <ul><li>Stacking more plain layers made even the <i>training</i> error worse.</li>
+  <li>This is not overfitting: the deeper model could copy the shallow one, but the optimizer does not find it.</li>
+  <li>We need a way to make very deep networks trainable.</li></ul>
+  <div class="viz" data-viz="degradation"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Why Plain Deep Networks Are Hard to Train</h2><div class="body">
+  <ul><li>Backpropagation multiplies local derivatives layer by layer (lecture 1).</li>
+  <li>If each factor is a bit below one, the gradient fades before it reaches the early layers.</li>
+  <li>A shortcut that passes the gradient unchanged keeps all layers learning.</li></ul>
+  <div class="viz" data-viz="vanishing"></div></div></section>
+
+<section class="slide" data-part="2"><h2>The Residual Block</h2><div class="body">
+  <ul><li>The block adds its input to the output of two convolutions.</li>
+  <li>The layers only learn what to change; doing nothing is easy.</li>
+  <li>This single idea enabled networks with 50, 100, and more layers.</li></ul>
+  <div class="viz" data-viz="resblock"></div></div></section>
+
+<section class="slide" data-part="2"><h2>When Shapes Do Not Match</h2><div class="body">
+  <ul><li>Adding requires identical shapes (lecture 1: shapes are part of the design).</li>
+  <li>At a stage boundary, the main path halves the resolution and doubles the channels.</li>
+  <li>A 1 × 1 convolution with stride 2 on the shortcut adapts the input.</li></ul>
+  <div class="viz" data-viz="projection"></div></div></section>
+
+<section class="slide" data-part="2"><h2>The Bottleneck Block</h2><div class="body">
+  <ul><li>Deep ResNets have 256 or more channels; a 3 × 3 there is costly.</li>
+  <li>1 × 1 squeezes to 64 channels, the 3 × 3 works there, 1 × 1 expands back.</li>
+  <li>17 × fewer weights per block — this is what ResNet-50 and deeper use.</li></ul>
+  <div class="viz" data-viz="bottleneck"></div></div></section>
+
+<section class="slide" data-part="2"><h2>The ResNet Family</h2><div class="body">
+  <ul><li>ResNet-18/34 use basic blocks; ResNet-50/101/152 use bottlenecks.</li>
+  <li>Accuracy grows with depth, but each step costs more for less gain.</li>
+  <li>ResNet-50 is the most common default backbone to start with.</li></ul>
+  <div class="viz" data-viz="resnetFamily"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Two Ways to Merge Tensors</h2><div class="body">
+  <ul><li>Adding keeps the number of channels and requires identical shapes.</li>
+  <li>Concatenating stacks the channels and only requires the same height and width.</li>
+  <li>Every architecture diagram is built from these two merges — look for them.</li></ul>
+  <div class="viz" data-viz="addConcat"></div></div></section>
+
+<section class="slide" data-part="2"><h2>DenseNet: Concatenate Everything</h2><div class="body">
+  <ul><li>Inside a block, each layer receives the concatenated outputs of all earlier layers.</li>
+  <li>It adds only a few new channels (growth rate <span class="m">k</span>), so it stays small.</li>
+  <li>Few parameters, but the growing concatenations cost memory bandwidth.</li></ul>
+  <div class="viz" data-viz="dense"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Depthwise Separable Convolution</h2><div class="body">
+  <ul><li>A standard convolution filters space and mixes channels in one expensive step.</li>
+  <li>Split it: a depthwise 3 × 3 per channel, then a pointwise 1 × 1 to mix channels.</li>
+  <li>Almost the same expressive power for about 1/8 of the cost.</li></ul>
+  <div class="viz" data-viz="depthwise"></div></div></section>
+
+<section class="slide" data-part="2"><h2>MobileNetV2: The Inverted Residual</h2><div class="body">
+  <ul><li>Expand a narrow tensor, filter it with a cheap depthwise conv, project it back.</li>
+  <li>The skip connection joins the narrow ends — the reverse of a bottleneck.</li>
+  <li>Built for phones and embedded devices.</li></ul>
+  <div class="viz" data-viz="inverted"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Two Knobs: Width and Resolution</h2><div class="body">
+  <ul><li>Width <span class="m">α</span> scales all channel counts; cost and parameters scale with <span class="m">α</span>².</li>
+  <li>Input resolution scales cost quadratically but not the parameters.</li>
+  <li>Try it: which knob would you turn for small defects, which for a tight latency budget?</li></ul>
+  <div class="viz" data-viz="mobileScale"></div></div></section>
+
+<section class="slide" data-part="2"><h2>EfficientNet: Scale Everything Together</h2><div class="body">
+  <ul><li>Making a network only wider, only deeper, or only higher-resolution saturates quickly.</li>
+  <li>EfficientNet grows all three together with fixed ratios (compound scaling).</li>
+  <li>B0 … B7 form one family from small to large.</li></ul>
+  <div class="viz" data-viz="compound"></div></div></section>
+
+<section class="slide" data-part="2"><h2>Reusing a Pretrained Backbone</h2><div class="body">
+  <ul><li>How much to fine-tune depends on dataset size and on how close the domain is to ImageNet.</li>
+  <li>Industrial images (grayscale, X-ray, microscopy) are often far from it.</li>
+  <li>Always compare with a frozen backbone: it is the cheapest baseline.</li></ul>
+  <div class="viz" data-viz="transfer2x2"></div></div></section>
+
+<section class="slide question" data-sub="Choose a backbone"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>An inspection camera runs on an embedded board without a GPU. Which backbone family do you try first, and what do you measure?</h3>
+  <div class="answer step">MobileNet or EfficientNet-B0 (depthwise separable). Measure end-to-end latency on the board itself, not FLOPs on a PC.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 3 -->
+<section class="slide" data-part="3"><h2>The Classification Head</h2><div class="body">
+  <ul><li>Global average pooling turns the last map into one vector per image.</li>
+  <li>A linear layer maps it to class logits; softmax gives probabilities.</li>
+  <li>Dropout before the linear layer helps on small datasets.</li></ul>
+  <div class="viz" data-viz="clsHead"></div></div></section>
+
+<section class="slide" data-part="3"><h2>GAP versus Flatten</h2><div class="body">
+  <ul><li>Flattening keeps position but makes the head 50 × larger.</li>
+  <li>GAP discards position and works for any input resolution.</li>
+  <li>For classification GAP is the standard; for localization neither is enough.</li></ul>
+  <div class="viz" data-viz="gapFlatten"></div></div></section>
+
+<section class="slide" data-part="3"><h2>One Feature Vector, Several Head Types</h2><div class="body">
+  <ul><li>The output activation and the loss must match what the label means (lecture 1).</li>
+  <li>Several heads can share one backbone (multi-task learning).</li>
+  <li>The head is small: changing it is cheap.</li></ul>
+  <div class="viz" data-viz="otherHeads"></div></div></section>
+
+<section class="slide" data-part="3"><h2>Embedding Heads: Learning Similarity</h2><div class="body">
+  <ul><li>Instead of class scores, the head outputs a vector (embedding).</li>
+  <li>Two images pass through the same backbone; their distance measures similarity.</li>
+  <li>New classes need no retraining: just compare with stored examples.</li></ul>
+  <div class="viz" data-viz="siamese"></div></div></section>
+
+<section class="slide" data-part="3"><h2>What an Embedding Space Is Good For</h2><div class="body">
+  <ul><li>Training arranges the space so that similar images are close.</li>
+  <li>Then search, clustering, and anomaly detection are just distance computations.</li>
+  <li>Useful in inspection: only “good” parts are needed to flag unusual ones.</li></ul>
+  <div class="viz" data-viz="embedSpace"></div></div></section>
+
+<section class="slide question" data-sub="Pick a head"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>A line produces 300 part types and new types appear every month. Classification head or embedding head?</h3>
+  <div class="answer step">Embedding head: a new type only needs reference images in the database, not a new output neuron and retraining.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 4 -->
+<section class="slide" data-part="4"><h2>Detection Changes the Output</h2><div class="body">
+  <ul><li>The number of objects is unknown and different in every image.</li>
+  <li>Each object needs a class, a confidence score, and four box coordinates.</li>
+  <li>A fixed-size output layer cannot produce this directly.</li></ul>
+  <div class="viz" data-viz="detOut"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Describing a Box</h2><div class="body">
+  <ul><li>Two corners, or a centre plus width and height: the same box.</li>
+  <li>Datasets and libraries differ (pixels vs. 0–1, corners vs. centre).</li>
+  <li>A wrong format is a common, silent bug.</li></ul>
+  <div class="viz" data-viz="boxFormats"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Intersection over Union</h2><div class="body">
+  <ul><li>IoU measures how well a predicted box overlaps the true one: 0 = disjoint, 1 = identical.</li>
+  <li>It decides whether a detection counts as correct, and drives duplicate removal.</li>
+  <li>Move the prediction and watch how fast IoU drops.</li></ul>
+  <div class="viz" data-viz="iouViz"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Two Families of Detectors</h2><div class="body">
+  <ul><li>Two-stage: first propose likely regions, then classify each one.</li>
+  <li>One-stage: predict boxes densely at every location in a single pass.</li>
+  <li>Both need a final filtering step.</li></ul>
+  <div class="viz" data-viz="detFamilies"></div></div></section>
+
+<section class="slide" data-part="4"><h2>From R-CNN to Faster R-CNN</h2><div class="body">
+  <ul><li>R-CNN ran a whole CNN on 2000 crops per image.</li>
+  <li>Fast R-CNN ran the CNN once and cropped the feature map instead.</li>
+  <li>Faster R-CNN also learned the proposals: fully end to end.</li></ul>
+  <div class="viz" data-viz="rcnn"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Region Proposal Network</h2><div class="body">
+  <ul><li>A small conv network slides over the feature map.</li>
+  <li>At each location it scores a set of reference boxes (anchors) and refines them.</li>
+  <li>The best few hundred become proposals for the second stage.</li></ul>
+  <div class="viz" data-viz="rpn"></div></div></section>
+
+<section class="slide" data-part="4"><h2>RoI Pooling and RoI Align</h2><div class="body">
+  <ul><li>Proposals have different sizes, but the second-stage head needs a fixed-size input.</li>
+  <li>RoI pooling snaps the box to the grid; RoI Align samples it exactly.</li>
+  <li>The difference matters for masks and small objects.</li></ul>
+  <div class="viz" data-viz="roiAlign"></div></div></section>
+
+<section class="slide" data-part="4"><h2>One-Stage Detection: Predict on a Grid</h2><div class="body">
+  <ul><li>The final feature map is a grid; each cell is responsible for objects centred in it.</li>
+  <li>Each cell predicts boxes, confidences, and class scores directly.</li>
+  <li>One forward pass, no proposals: YOLO, SSD.</li></ul>
+  <div class="viz" data-viz="yoloGrid"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Anchors: Predict Corrections, Not Boxes</h2><div class="body">
+  <ul><li>Each cell has a few reference boxes of typical sizes and aspect ratios.</li>
+  <li>The network predicts small offsets from the best-matching anchor.</li>
+  <li>Small, normalized targets are much easier to learn than raw coordinates.</li></ul>
+  <div class="viz" data-viz="anchors"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Objectness and the Background Class</h2><div class="body">
+  <ul><li>Most candidate boxes contain no object.</li>
+  <li>YOLO adds an objectness score; SSD and RetinaNet add a background class.</li>
+  <li>Either way, a score threshold removes most candidates.</li></ul>
+  <div class="viz" data-viz="objectness"></div></div></section>
+
+<section class="slide" data-part="4"><h2>From Ten Thousand Candidates to a Few Boxes</h2><div class="body">
+  <ul><li>Dense detectors score every anchor at every location of several maps.</li>
+  <li>A score threshold keeps the confident ones.</li>
+  <li>Several boxes still cover the same object — they must be merged.</li></ul>
+  <div class="viz" data-viz="funnel"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Non-Maximum Suppression</h2><div class="body">
+  <ul><li>Take the highest-scoring box and keep it.</li>
+  <li>Remove all remaining boxes that overlap it with IoU above a threshold.</li>
+  <li>Repeat until no boxes are left. Press → to run it.</li></ul>
+  <div class="viz" data-viz="nms"></div></div></section>
+
+<section class="slide" data-part="4"><h2>When NMS Removes Real Objects</h2><div class="body">
+  <ul><li>Neighbouring objects of the same class can overlap strongly.</li>
+  <li>NMS cannot tell a duplicate from a neighbour — only the IoU threshold decides.</li>
+  <li>Move the threshold and watch the second cat.</li></ul>
+  <div class="viz" data-viz="nmsFail"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Focal Loss: Too Many Easy Negatives</h2><div class="body">
+  <ul><li>A dense detector sees thousands of easy background boxes per image.</li>
+  <li>Their small losses add up and dominate cross-entropy (lecture 1: class imbalance).</li>
+  <li>Focal loss down-weights examples the model already gets right.</li></ul>
+  <div class="viz" data-viz="focal"></div></div></section>
+
+<section class="slide" data-part="4"><h2>Measuring Detection: Precision, Recall, AP</h2><div class="body">
+  <ul><li>A detection is a true positive if it matches an unmatched object with IoU ≥ 0.5.</li>
+  <li>Sweeping the score threshold traces a precision–recall curve.</li>
+  <li>Average precision (AP) summarizes it; mAP averages over classes.</li></ul>
+  <div class="viz" data-viz="prCurve"></div></div></section>
+
+<section class="slide question" data-sub="Small defects"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>Your detector misses 10-pixel defects. Deeper backbone, or a higher-resolution feature map?</h3>
+  <div class="answer step">Higher resolution: at stride 32 the defect is a fraction of one cell and is averaged away. Depth adds semantics, not detail.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 5 -->
+<section class="slide" data-part="5"><h2>Why Small Objects Get Lost</h2><div class="body">
+  <ul><li>On a stride-32 map, one cell summarizes 32 × 32 input pixels.</li>
+  <li>An object smaller than a cell is mixed with its background.</li>
+  <li>Small objects need fine maps; large objects need wide context.</li></ul>
+  <div class="viz" data-viz="smallObj"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Detail versus Meaning</h2><div class="body">
+  <ul><li>Shallow maps are sharp but semantically weak.</li>
+  <li>Deep maps are semantically strong but coarse.</li>
+  <li>A neck brings the meaning of deep maps down to the fine levels.</li></ul>
+  <div class="viz" data-viz="semDetail"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Feature Pyramid Network, Step by Step</h2><div class="body">
+  <ul><li>Start from the deepest map; upsample it and add the next finer backbone map.</li>
+  <li>1 × 1 lateral convolutions make the channel counts equal (so they can be added).</li>
+  <li>The result: a pyramid where every level is both fine and semantic.</li></ul>
+  <div class="viz" data-viz="fpn"></div></div></section>
+
+<section class="slide" data-part="5"><h2>Which Level Detects Which Object</h2><div class="body">
+  <ul><li>Small objects are assigned to P3, large ones to P5.</li>
+  <li>Each level then only handles a limited range of sizes.</li>
+  <li>The head is shared: it learns one rule applied at every scale.</li></ul>
+  <div class="viz" data-viz="levelAssign"></div></div></section>
+
+<section class="slide" data-part="5"><h2>PANet and BiFPN</h2><div class="body">
+  <ul><li>FPN sends information only from deep to fine levels.</li>
+  <li>PANet adds a bottom-up path so fine details reach the deep levels too.</li>
+  <li>BiFPN repeats weighted two-way fusion; more fusion is not free — measure it.</li></ul>
+  <div class="viz" data-viz="panBifpn"></div></div></section>
+
+<section class="slide question" data-sub="Choose a level"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>All objects in your data are between 8 and 20 pixels. What would you change in a standard FPN detector?</h3>
+  <div class="answer step">Add or emphasize a finer level (P2, stride 4), drop P5–P7, and check anchor sizes; also consider a higher input resolution.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 6 -->
+<section class="slide" data-part="6"><h2>Kinds of Segmentation</h2><div class="body">
+  <ul><li>Semantic: every pixel gets a class; objects of one class merge.</li>
+  <li>Instance: every object gets its own mask.</li>
+  <li>Panoptic: both at once — countable objects plus background regions.</li></ul>
+  <div class="viz" data-viz="segTypes"></div></div></section>
+
+<section class="slide" data-part="6"><h2>Real Segmentation Tasks</h2><div class="body">
+  <ul><li>Thin cracks on steel: tiny, elongated, extremely imbalanced.</li>
+  <li>Apples among leaves: occlusion, varying size, similar colours.</li>
+  <li>The output must be as sharp as the annotation.</li></ul>
+  <div class="viz" data-viz="segExamples"></div></div></section>
+
+<section class="slide" data-part="6"><h2>The Segmentation Output</h2><div class="body">
+  <ul><li>The network outputs <span class="m">C</span> logit maps, one per class.</li>
+  <li>Softmax across channels at each pixel gives class probabilities.</li>
+  <li>Argmax per pixel gives the label map.</li></ul>
+  <div class="viz" data-viz="pixelSoftmax"></div></div></section>
+
+<section class="slide" data-part="6"><h2>Why the Backbone Alone Is Not Enough</h2><div class="body">
+  <ul><li>The last backbone map has stride 32: a 331-pixel image becomes 10 × 10 cells.</li>
+  <li>Upsampled back, the mask is blocky and small objects vanish.</li>
+  <li>We need to recover resolution — and the detail lost on the way down.</li></ul>
+  <div class="viz" data-viz="coarse"></div></div></section>
+
+<section class="slide" data-part="6"><h2>Upsampling</h2><div class="body">
+  <ul><li>Nearest neighbour and bilinear interpolation have no parameters.</li>
+  <li>Transposed convolution learns the upsampling but can create checkerboard patterns.</li>
+  <li>Bilinear resize followed by a convolution is a safe default.</li></ul>
+  <div class="viz" data-viz="upsample"></div></div></section>
+
+<section class="slide" data-part="6"><h2>Encoder–Decoder with Skip Connections</h2><div class="body">
+  <ul><li>The encoder is a backbone; the decoder upsamples step by step.</li>
+  <li>Skip connections concatenate encoder maps of the same size into the decoder.</li>
+  <li>This is U-Net (2015) — originally for medical images, now a general pattern.</li></ul>
+  <div class="viz" data-viz="unet"></div></div></section>
+
+<section class="slide" data-part="6"><h2>U-Net Shapes</h2><div class="body">
+  <div class="viz" data-viz="rowSteps" style="flex-direction:column">
+  <table class="t">
+    <thead><tr><th>level</th><th>encoder output</th><th>decoder input (after concat)</th><th>decoder output</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>64 × 256 × 256</td><td>64 + 64 = 128 × 256 × 256</td><td>64 × 256 × 256</td></tr>
+      <tr><td>2</td><td>128 × 128 × 128</td><td>128 + 128 = 256 × 128 × 128</td><td>128 × 128 × 128</td></tr>
+      <tr><td>3</td><td>256 × 64 × 64</td><td>256 + 256 = 512 × 64 × 64</td><td>256 × 64 × 64</td></tr>
+      <tr><td>4</td><td>512 × 32 × 32</td><td>512 + 512 = 1024 × 32 × 32</td><td>512 × 32 × 32</td></tr>
+      <tr><td>bottleneck</td><td>1024 × 16 × 16</td><td>–</td><td>upsampled to 512 × 32 × 32</td></tr>
+      <tr><td>output</td><td></td><td></td><td>1 × 1 conv → <span class="m">C</span> × 256 × 256</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:22px;color:var(--muted);margin-top:26px">Read from the bottom up: each decoder level upsamples, concatenates the encoder map of the same size, then convolves. Padded convolutions keep the sizes aligned.</p>
+  </div></div></section>
+
+<section class="slide" data-part="6"><h2>Instance Segmentation: Mask R-CNN</h2><div class="body">
+  <ul><li>Detect each object first, then segment inside its box.</li>
+  <li>A small mask branch is added next to the box head of Faster R-CNN.</li>
+  <li>RoI Align (Part 4) is what makes these masks accurate.</li></ul>
+  <div class="viz" data-viz="maskrcnn"></div></div></section>
+
+<section class="slide" data-part="6"><h2>Measuring Segmentation</h2><div class="body">
+  <ul><li>Pixel accuracy is misleading when the object is small (lecture 1: imbalance).</li>
+  <li>IoU and Dice measure the overlap of the predicted and true regions.</li>
+  <li>Report them per class; for thin structures also check boundaries.</li></ul>
+  <div class="viz" data-viz="segMetrics"></div></div></section>
+
+<section class="slide question" data-sub="Thin cracks"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>For the steel billet cracks: semantic or instance segmentation, which decoder, and which metric?</h3>
+  <div class="answer step">Semantic (one crack class), U-Net-style decoder with skips to keep 1-pixel detail, Dice or IoU of the crack class (maybe with a boundary tolerance) — never pixel accuracy.</div></div><div class="qmark">?</div></div></section>
+
+<!-- ================================================================= part 7 -->
+<section class="slide" data-part="7"><h2>Channel Attention: Squeeze and Excitation</h2><div class="body">
+  <ul><li>Not every channel is useful for every image.</li>
+  <li>SE summarizes each channel (GAP), computes a weight per channel, and rescales.</li>
+  <li>Cheap to add to any block; typically +1 point on ImageNet.</li></ul>
+  <div class="viz" data-viz="se"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Spatial Attention</h2><div class="body">
+  <ul><li>The same idea for positions: which parts of the map matter?</li>
+  <li>Pool over channels, convolve, and squash into a 0–1 weight per pixel.</li>
+  <li>The feature map is multiplied by this mask.</li></ul>
+  <div class="viz" data-viz="spatial"></div></div></section>
+
+<section class="slide" data-part="7"><h2>CBAM: What, Then Where</h2><div class="body">
+  <ul><li>Channel attention first, spatial attention second.</li>
+  <li>A drop-in module after convolutional blocks.</li>
+  <li>Attention reweights features — it cannot recover detail that was never resolved.</li></ul>
+  <div class="viz" data-viz="cbam"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Self-Attention versus Convolution</h2><div class="body">
+  <ul><li>A convolution only sees a fixed local neighbourhood.</li>
+  <li>Self-attention lets every position look at every other, weighted by content.</li>
+  <li>Global context at a quadratic cost; modern models mix both.</li></ul>
+  <div class="viz" data-viz="selfAtt"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Choosing an Architecture</h2><div class="body">
+  <ul><li>Decide in this order; each answer narrows the next choice.</li>
+  <li>Start from the simplest standard model that can produce the output.</li>
+  <li>Change one block at a time, driven by the errors you observe.</li></ul>
+  <div class="viz" data-viz="decision"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Three Common Situations</h2><div class="body">
+  <div class="cols" style="grid-template-columns:1fr 1fr 1fr;gap:36px;align-items:start;margin-top:10px">
+    <div class="step"><h3 style="font-size:30px;margin:0 0 14px;color:var(--blue)">Small dataset</h3><ul>
+      <li>pretrained backbone, simple head</li><li>freeze first, fine-tune later</li><li>split by part / batch / day</li><li>better labels beat a fancier neck</li></ul></div>
+    <div class="step"><h3 style="font-size:30px;margin:0 0 14px;color:var(--blue)">Small objects</h3><ul>
+      <li>higher input resolution or tiling</li><li>use a fine level (P3 or P2)</li><li>avoid early aggressive striding</li><li>report recall by object size</li></ul></div>
+    <div class="step"><h3 style="font-size:30px;margin:0 0 14px;color:var(--blue)">Edge deployment</h3><ul>
+      <li>MobileNet / EfficientNet backbone</li><li>static shapes, supported operators</li><li>measure end-to-end latency on the device</li><li>check quantized accuracy per class</li></ul></div>
+  </div></div></section>
+
+<section class="slide" data-part="7"><h2>Ablations: Which Change Helped?</h2><div class="body">
+  <div class="viz" data-viz="rowSteps" style="flex-direction:column">
+  <table class="t">
+    <thead><tr><th>variant</th><th class="r">mAP (all)</th><th class="r">recall, objects &lt; 16 px</th><th class="r">latency</th></tr></thead>
+    <tbody>
+      <tr><td>baseline: ResNet-50, P3–P5</td><td class="r">0.61</td><td class="r">0.42</td><td class="r">18 ms</td></tr>
+      <tr><td>+ input 640 → 960</td><td class="r">0.64</td><td class="r">0.58</td><td class="r">39 ms</td></tr>
+      <tr><td>+ P2 level instead</td><td class="r">0.63</td><td class="r">0.55</td><td class="r">24 ms</td></tr>
+      <tr><td>+ CBAM in the neck</td><td class="r">0.62</td><td class="r">0.44</td><td class="r">20 ms</td></tr>
+      <tr><td>ResNet-101 backbone</td><td class="r">0.62</td><td class="r">0.43</td><td class="r">29 ms</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:22px;color:var(--muted);margin-top:26px">Illustrative numbers. Change one thing per row, report quality <i>and</i> cost, and look at the metric that matches your problem — here, small-object recall.</p>
+  </div></div></section>
+
+<section class="slide" data-part="7"><h2>Reading a Network Diagram</h2><div class="body">
+  <ul><li>Annotate every node with <span class="m">C</span> × <span class="m">H</span> × <span class="m">W</span> before trusting a diagram.</li>
+  <li>For every merge, decide whether it adds or concatenates.</li>
+  <li>Work along the diagram; press → to check each shape.</li></ul>
+  <div class="viz" data-viz="readDiagram"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Common Design Mistakes</h2><div class="body">
+  <ul><li class="step">Downsampling too early: the defect is gone before any layer can see it.</li>
+  <li class="step">A head that does not match the annotation (boxes for amorphous regions, masks for counts).</li>
+  <li class="step">Copying the biggest model from a paper instead of the simplest that fits.</li>
+  <li class="step">Benchmarking the network alone, ignoring preprocessing, NMS, and data transfer.</li>
+  <li class="step">Judging a change by one aggregate number instead of the errors that matter.</li></ul>
+  </div></section>
+
+<section class="slide question" data-sub="System design"><h2>Check question</h2><div class="body">
+  <div class="q"><h3>A camera must find hairline cracks on a moving strip at 30 FPS. Sketch the backbone, neck, head, input size, and metric.</h3>
+  <div class="answer step">Tiles at full resolution, efficient backbone, U-Net-style decoder or P2-level head, Dice / recall on cracks, latency measured end to end on the target hardware.</div></div><div class="qmark">?</div></div></section>
+
+<section class="slide" data-part="7"><h2>A Short History</h2><div class="body">
+  <ul><li>Most building blocks used today appeared between 2012 and 2018.</li>
+  <li>Later work refines efficiency, scaling, and training — and adds transformers.</li>
+  <li>Knowing the blocks lets you read new architectures quickly.</li></ul>
+  <div class="viz" data-viz="history"></div></div></section>
+
+<section class="slide" data-part="7"><h2>What to Remember</h2><div class="body">
+  <ul><li>Backbone, neck, and head solve different parts of the problem.</li>
+  <li>Spatial scale decides most localization problems.</li>
+  <li>Choose by output, object size, budget, and observed errors — not by popularity.</li></ul>
+  <div class="viz" data-viz="summary2"></div></div></section>
+
+<section class="slide" data-part="7"><h2>Before the Next Lecture</h2><div class="body">
+  <ul><li>So far, every output lived in a single image plane.</li>
+  <li>Next, the course turns to geometry: camera models, multi-view geometry, and conventional visual SLAM.</li>
+  <li>Learned 3D reconstruction comes later and builds on both: CNN features and SLAM poses.</li></ul>
+  <div class="viz" data-viz="next3d"></div></div></section>
+
+<div id="footer"></div><div id="stepdots"></div><div id="progress"></div>
+</div></div>
+
+<div id="overview"></div>
+<div id="help"><b>Keys</b><br>
+→ / Space / PageDown / click — next step<br>
+← / PageUp — previous step<br>
+Shift + → / ← — skip to next / previous slide<br>
+F — fullscreen · O — overview · R — restart slide<br>
+type a number + Enter — go to slide<br>
+python shared/export_pdf.py all — PDF of every lecture</div>
+</body>
+</html>
