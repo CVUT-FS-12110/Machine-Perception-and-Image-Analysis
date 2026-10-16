@@ -6,34 +6,34 @@ VIZ.mvsToField = host => {
   const svg = V.svg(host, 1400, 430);
   const L = V.g(svg), R = fadeIn(V.g(svg));
   const FL = frame(30, 60, 600, 280), FR = frame(760, 60, 600, 280);
-  V.text(L, 330, 22, "MVS: one depth map per reference view", { size: 21, weight: 700 });
+  V.text(L, 330, 22, "MVS: one depth map per reference view", { size: 23, weight: 700 });
   ["blue", "orange", "green"].forEach((c, i) => {
     const off = (i - 1) * .06;
     const segs = SEGS.filter(s => s[1] > -.2 + i * .1).map(s => [s[0], s[1] + off, s[2], s[3] + off]);
     drawContour(L, FL, c, 2.5, segs);
   });
-  V.text(L, 330, 395, "separate estimates must be fused and may disagree", { size: 18, cls: "muted" });
-  V.text(R, 1060, 22, "neural field: one function for the whole scene", { size: 21, weight: 700 });
+  V.text(L, 330, 395, "separate estimates must be fused and may disagree", { size: 22, cls: "muted" });
+  V.text(R, 1060, 22, "neural field: one function for the whole scene", { size: 23, weight: 700 });
   drawContour(R, FR, "ink", 3);
-  [[-2.4, 1.6], [0, 1.9], [2.4, 1.6], [-2.6, -.8], [2.6, -.8]].forEach(([x, y]) => {
+  [[-2.4, 1.6], [0, 1.72], [2.4, 1.6], [-2.6, -.8], [2.6, -.8]].forEach(([x, y]) => {
     const tx = x * .3, ty = y * .2;
     V.line(R, FR.X(x), FR.Y(y), FR.X(tx), FR.Y(ty), { style: "stroke:var(--blue)", "stroke-dasharray": "6 5", opacity: .7 });
     V.circle(R, FR.X(x), FR.Y(y), 8, { style: "fill:var(--blue)" });
   });
-  V.text(R, 1060, 395, "every pixel of every camera constrains the same model", { size: 18, cls: "muted" });
+  V.text(R, 1060, 395, "every pixel of every camera constrains the same model", { size: 22, cls: "muted" });
   return { steps: 1, set(s) { V.show(R, s >= 1); } };
 };
 
 VIZ.nerfIO = flow({
   w: 1400, h: 330, nodes: [
-    { id: "p", x: 0, y: 110, w: 170, h: 100, label: "pixel\n~+ pose, intrinsics" },
-    { id: "r", x: 220, y: 110, w: 170, h: 100, label: "ray\n~origin + direction $**d**$", step: 1 },
-    { id: "s", x: 440, y: 110, w: 180, h: 100, label: "samples $**x**$_i\n~along the ray", step: 1 },
-    { id: "m", x: 670, y: 110, w: 190, h: 100, label: "MLP($**x**$_i, $**d**$)\n~→ $σ$_i, $**c**$_i", cls: "blue", step: 2 },
-    { id: "v", x: 910, y: 110, w: 200, h: 100, label: "volume rendering\n~→ colour $Ĉ$", step: 3 },
-    { id: "l", x: 1160, y: 110, w: 230, h: 100, label: "loss ‖$Ĉ$ − $C$_{photo}‖²", cls: "good", step: 4 }],
+    { id: "p", x: 0, y: 100, w: 186, h: 110, label: "pixel\n~+ pose, intrinsics", size: 24 },
+    { id: "r", x: 226, y: 100, w: 224, h: 110, label: "ray\n~origin + direction $**d**$", step: 1, size: 24 },
+    { id: "s", x: 490, y: 100, w: 166, h: 110, label: "samples $**x**$_i\n~along the ray", step: 1, size: 24 },
+    { id: "m", x: 696, y: 100, w: 180, h: 110, label: "MLP($**x**$_i, $**d**$)\n~→ $σ$_i, $**c**$_i", cls: "blue", step: 2, size: 24 },
+    { id: "v", x: 916, y: 100, w: 220, h: 110, label: "volume rendering\n~→ colour $Ĉ$", step: 3, size: 24 },
+    { id: "l", x: 1176, y: 100, w: 214, h: 110, label: "loss ‖$Ĉ$ − $C$_{photo}‖²", cls: "good", step: 4, size: 24 }],
   edges: [{ a: "p", b: "r", step: 1 }, { a: "r", b: "s", step: 1 }, { a: "s", b: "m", step: 2 }, { a: "m", b: "v", step: 3 }, { a: "v", b: "l", step: 4 },
-  { a: "l", b: "m", d: "M1275,215 Q1000,320 765,215", color: "magenta", step: 4, label: "gradients update the MLP weights", lx: 1020, ly: 300 }],
+  { a: "l", b: "m", d: "M1283,215 Q1035,320 786,215", color: "magenta", step: 4, label: "gradients update the MLP weights", lx: 1035, ly: 302, size: 22 }],
 });
 
 VIZ.posEnc = host => {
@@ -45,8 +45,8 @@ VIZ.posEnc = host => {
   V.path(svg, V.pathFn(target, 0, 1, X, Y, 400), "", { style: "fill:none;stroke:var(--muted);stroke-width:3;stroke-dasharray:6 5" });
   const fit = V.path(svg, "", "curve", { style: "stroke:var(--magenta)" });
   const info = V.text(svg, 1160, 90, "", { size: 22, weight: 700 });
-  V.text(svg, 1160, 190, "γ($x$) = [sin(2^k π$x$), cos(2^k π$x$)]_{k < L}\nfed to the network instead of $x$", { size: 19 });
-  V.text(svg, 1160, 290, "curve: least-squares fit on γ($x$);\nfew frequencies = blurry, more = detail", { size: 17, cls: "muted" });
+  V.text(svg, 1165, 180, "γ($x$) = [sin(2^k π$x$), cos(2^k π$x$)]_{k < L}\nfed to the network instead of $x$", { size: 22 });
+  V.text(svg, 1165, 285, "curve: least-squares fit on γ($x$);\nfew frequencies = blurry,\nmore = detail", { size: 21, cls: "muted" });
   const xs = range(300).map(i => i / 299), ys = xs.map(target);
   const solve = (A, b) => { const n = b.length; for (let i = 0; i < n; i++) { let p = i; for (let r = i + 1; r < n; r++) if (Math.abs(A[r][i]) > Math.abs(A[p][i])) p = r; [A[i], A[p]] = [A[p], A[i]]; [b[i], b[p]] = [b[p], b[i]]; for (let r = i + 1; r < n; r++) { const f = A[r][i] / A[i][i]; for (let c = i; c < n; c++) A[r][c] -= f * A[i][c]; b[r] -= f * b[i]; } } const x = Array(n).fill(0); for (let i = n - 1; i >= 0; i--) { let s = b[i]; for (let c = i + 1; c < n; c++) s -= A[i][c] * x[c]; x[i] = s / A[i][i]; } return x; };
   const upd = v => {
@@ -66,14 +66,14 @@ VIZ.posEnc = host => {
 VIZ.volRender = host => {
   host.style.flexDirection = "column";
   const svg = V.svg(host, 1400, 360);
-  const N = 80, t0 = 0, t1 = 1, dt = (t1 - t0) / N, X = t => 120 + t * 760;
-  V.text(svg, 60, 40, "ray", { size: 19, weight: 700 });
+  const N = 80, t0 = 0, t1 = 1, dt = (t1 - t0) / N, X = t => 250 + t * 750;
+  V.text(svg, 235, 40, "ray", { size: 22, weight: 700, anchor: "end" });
   const ray = V.g(svg);
   const rows = [["density $σ$(t)", 140, "orange"], ["transmittance $T$(t)", 230, "blue"], ["weight $w$ = $T$ α", 320, "magenta"]];
-  const P = rows.map(([n, y, c]) => { V.text(svg, 110, y - 30, n, { size: 18, anchor: "end" }); V.line(svg, X(0), y, X(1), y, { style: "stroke:var(--rule)" }); return V.path(svg, "", "", { style: `fill:var(--${c});fill-opacity:.25;stroke:var(--${c});stroke-width:2.5` }); });
-  const swatch = V.rect(svg, 1060, 60, 160, 160, "", { rx: 8, style: "stroke:var(--ink);stroke-width:2" });
-  V.text(svg, 1140, 245, "rendered pixel", { size: 19, weight: 700 });
-  const txt = V.text(svg, 1140, 300, "", { size: 18 });
+  const P = rows.map(([n, y, c]) => { V.text(svg, 235, y - 25, n, { size: 22, anchor: "end" }); V.line(svg, X(0), y, X(1), y, { style: "stroke:var(--rule)" }); return V.path(svg, "", "", { style: `fill:var(--${c});fill-opacity:.25;stroke:var(--${c});stroke-width:2.5` }); });
+  const swatch = V.rect(svg, 1110, 50, 160, 160, "", { rx: 8, style: "stroke:var(--ink);stroke-width:2" });
+  V.text(svg, 1190, 240, "rendered pixel", { size: 22, weight: 700 });
+  const txt = V.text(svg, 1190, 295, "", { size: 22 });
   const upd = v => {
     const sig = [], col = [];
     for (let i = 0; i < N; i++) {
@@ -107,15 +107,15 @@ VIZ.renderTable = host => {
   const cols = [["sample $i$", i => i + 1], ["$σ$_i", i => sig[i]], ["$α$_i = 1 − e^{−σδ}", i => a[i].toFixed(3)], ["$T$_i = Π(1 − $α$_j)", i => T[i].toFixed(3)], ["$w$_i = $T$_i $α$_i", i => w[i].toFixed(3)], ["$c$_i", i => c[i]], ["$w$_i $c$_i", i => (w[i] * c[i]).toFixed(3)]];
   const G = cols.map(([h, f], j) => {
     const g = fadeIn(V.g(svg)), x = 90 + j * 190;
-    V.text(g, x, 40, h, { size: 19, weight: 700 });
-    range(4).forEach(i => V.text(g, x, 95 + i * 50, f(i), { size: 21 }));
+    V.text(g, x, 38, h, { size: 22, weight: 700 });
+    range(4).forEach(i => V.text(g, x, 97 + i * 50, f(i), { size: 23 }));
     return g;
   });
   V.line(svg, 20, 62, 1380, 62, { style: "stroke:var(--ink)", "stroke-width": 2 });
   const res = fadeIn(V.g(svg));
   V.text(res, 700, 330, `$Ĉ$ = Σ $w$_i $c$_i + $T$_{end} · background = ${(C - t).toFixed(3)} + ${t.toFixed(3)} · 1.0 = **${C.toFixed(3)}**`, { size: 24 });
-  V.text(res, 700, 385, "sample 3 (high density) dominates: it is the first opaque thing the ray meets", { size: 20, fill: "var(--blue)", weight: 700 });
-  V.text(svg, 1300, 410, "step δ = 0.25", { size: 17, cls: "muted" });
+  V.text(res, 700, 380, "sample 3 (high density) dominates: it is the first opaque thing the ray meets", { size: 22, fill: "var(--blue)", weight: 700 });
+  V.text(svg, 1310, 415, "step δ = 0.25", { size: 21, cls: "muted" });
   return { steps: 4, set(s) { G.forEach((g, j) => V.show(g, j <= [1, 2, 3, 4, 6][s] || j === 0)); V.show(res, s >= 4); } };
 };
 
@@ -126,8 +126,8 @@ VIZ.nerfTrain = host => {
   const cams = [[-2.3, 1.7], [0, 2.05], [2.3, 1.7], [-2.7, -.6], [2.7, -.6]].map(([x, y]) => [F.X(x), F.Y(y)]);
   cams.forEach(c => cam(svg, c[0], c[1], Math.atan2(F.Y(.2) - c[1], F.X(0) - c[0]), 40, "blue"));
   const live = V.g(svg);
-  const info = V.text(svg, 1200, 200, "", { size: 21 });
-  V.text(svg, 1200, 300, "each step: a random batch of rays\nfrom all training images", { size: 18, cls: "muted" });
+  const info = V.text(svg, 1205, 200, "", { size: 23 });
+  V.text(svg, 1205, 300, "each step: a random batch\nof rays from all\ntraining images", { size: 22, cls: "muted" });
   let last = -1;
   const lp = V.loop(t => {
     const k = Math.floor(t / .35); if (k === last) return; last = k;
@@ -149,7 +149,7 @@ VIZ.hierSampling = host => {
   const svg = V.svg(host, 1400, 420);
   const X = t => 120 + t * 1000, sigma = t => 40 * Math.exp(-((t - .63) ** 2) / .0008) + 6 * Math.exp(-((t - .3) ** 2) / .002);
   const rowC = 90, rowW = 230, rowF = 340;
-  V.text(svg, 100, rowC, "coarse", { size: 19, anchor: "end", weight: 700 }); V.text(svg, 100, rowW - 30, "weights", { size: 19, anchor: "end", weight: 700 }); V.text(svg, 100, rowF, "fine", { size: 19, anchor: "end", weight: 700 });
+  V.text(svg, 100, rowC, "coarse", { size: 22, anchor: "end", weight: 700 }); V.text(svg, 100, rowW - 30, "weights", { size: 22, anchor: "end", weight: 700 }); V.text(svg, 100, rowF, "fine", { size: 22, anchor: "end", weight: 700 });
   [rowC, rowF].forEach(y => V.line(svg, X(0), y, X(1), y, { style: "stroke:var(--ink)" }));
   const Nc = 32, tc = range(Nc).map(i => (i + .5) / Nc);
   tc.forEach(t => V.circle(svg, X(t), rowC, 5, { style: "fill:var(--blue)" }));
@@ -160,8 +160,8 @@ VIZ.hierSampling = host => {
   const Fg = fadeIn(V.g(svg));
   const cdf = []; let s = 0; w.forEach(v => { s += v; cdf.push(s); });
   range(48).forEach(i => { const u = (i + .5) / 48 * s; let k = cdf.findIndex(v => v >= u); const prev = k ? cdf[k - 1] : 0; const t = (k + (u - prev) / (w[k] || 1)) / Nc; V.circle(Fg, X(t), rowF, 5, { style: "fill:var(--green)" }); });
-  V.text(Fg, 1270, rowF, "samples where\nthe weight is", { size: 18, cls: "muted" });
-  V.text(svg, 1270, rowC, "uniform", { size: 18, cls: "muted" });
+  V.text(Fg, 1265, rowF, "samples where\nthe weight is high", { size: 22, cls: "muted" });
+  V.text(svg, 1265, rowC, "uniform", { size: 22, cls: "muted" });
   return { steps: 2, set(st) { V.show(W, st >= 1); V.show(Fg, st >= 2); } };
 };
 
@@ -170,14 +170,14 @@ VIZ.coverage = host => {
   const F = frame(250, 120, 560, 260);
   drawContour(svg, F, "ink", 3);
   range(7).forEach(i => { const a = Math.PI * (1.15 + .7 * i / 6), x = 530 + 400 * Math.cos(a), y = 250 + 230 * Math.sin(a); cam(svg, x, y, Math.atan2(250 - y, 530 - x), 36, "blue"); });
-  V.text(svg, 530, 432, "training cameras (blue) all look from the top", { size: 19, fill: "var(--blue)", weight: 700 });
+  V.text(svg, 1100, 395, "training cameras (blue)\nall look from the top", { size: 22, fill: "var(--blue)", weight: 700 });
   const good = fadeIn(V.g(svg));
   cam(good, 300, 70, Math.atan2(250 - 70, 530 - 300), 44, "green", "");
-  V.text(good, 1100, 120, "novel view inside the coverage:\ninterpolates well", { size: 21, fill: "var(--green)", weight: 700 });
+  V.text(good, 1100, 110, "novel view inside the coverage:\ninterpolates well", { size: 23, fill: "var(--green)", weight: 700 });
   const bad = fadeIn(V.g(svg));
   cam(bad, 560, 430, -Math.PI / 2, 44, "red", "");
   reseed(4); range(9).forEach(() => V.el("ellipse", { cx: 400 + rnd() * 280, cy: 330 + rnd() * 80, rx: 8 + rnd() * 18, ry: 5 + rnd() * 10, style: "fill:var(--red);fill-opacity:.35" }, bad));
-  V.text(bad, 1100, 270, "view from below: never observed;\nfloaters and invented content", { size: 21, fill: "var(--red)", weight: 700 });
+  V.text(bad, 1100, 255, "view from below: never observed;\nfloaters and invented content", { size: 23, fill: "var(--red)", weight: 700 });
   return { steps: 2, set(s) { V.show(good, s >= 1); V.show(bad, s >= 2); } };
 };
 
@@ -190,15 +190,15 @@ VIZ.hashGrid = host => {
     const cx = Math.floor(q[0] * n), cy = Math.floor(q[1] * n);
     [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(([a, b]) => V.circle(g, ox + (cx + a) * s, 60 + (cy + b) * s, 6, { style: `fill:var(--${c})` }));
     V.circle(g, ox + q[0] * 240, 60 + q[1] * 240, 7, { style: "fill:var(--magenta)" });
-    V.text(g, ox + 120, 40, `level ${i + 1}: ${n} × ${n}`, { size: 19, weight: 700, fill: `var(--${c})` });
-    V.text(g, ox + 120, 330, "interpolate 4 corner\nfeature vectors", { size: 17, cls: "muted" });
+    V.text(g, ox + 120, 36, `level ${i + 1}: ${n} × ${n}`, { size: 23, weight: 700, fill: `var(--${c})` });
+    V.text(g, ox + 120, 335, "interpolate 4 corner\nfeature vectors", { size: 21, cls: "muted" });
     return g;
   });
   const M = fadeIn(V.g(svg));
-  V.arrow(M, 960, 180, 1010, 180);
-  V.box(M, 1020, 130, 160, 100, "concat\n~features", "box", { size: 19 }); V.arrow(M, 1185, 180, 1225, 180);
-  V.box(M, 1230, 130, 150, 100, "tiny MLP\n~→ $σ$, $**c**$", "box blue", { size: 19 });
-  V.text(M, 1200, 300, "features live in hash tables;\ntraining in seconds–minutes\ninstead of hours–days", { size: 19 });
+  V.arrow(M, 930, 180, 975, 180);
+  V.box(M, 985, 125, 170, 110, "concat\n~features", "box", { size: 24 }); V.arrow(M, 1160, 180, 1200, 180);
+  V.box(M, 1210, 125, 180, 110, "tiny MLP\n~→ $σ$, $**c**$", "box blue", { size: 24 });
+  V.text(M, 1185, 320, "features live in hash tables;\ntraining in seconds–minutes\ninstead of hours–days", { size: 22 });
   return { steps: 3, set(s) { G.forEach((g, i) => V.show(g, i <= s)); V.show(M, s >= 3); } };
 };
 
@@ -207,18 +207,18 @@ VIZ.nerfDepth = host => {
   const X = t => 140 + t * 900;
   const ray = (y, wf, title, col) => {
     const g = V.g(svg);
-    V.text(g, 700, y - 110, title, { size: 21, weight: 700, fill: `var(--${col})` });
+    V.text(g, 590, y - 120, title, { size: 23, weight: 700, fill: `var(--${col})` });
     V.line(g, X(0), y, X(1), y, { style: "stroke:var(--ink)" });
     const ws = range(60).map(i => wf((i + .5) / 60)), S = ws.reduce((a, b) => a + b), wn = ws.map(v => v / S), m = Math.max(...wn);
     wn.forEach((v, i) => V.rect(g, X((i + .5) / 60) - 6, y - v / m * 80, 12, v / m * 80, "", { style: `fill:var(--${col});fill-opacity:.55` }));
     const ed = wn.reduce((a, v, i) => a + v * (i + .5) / 60, 0);
-    V.line(g, X(ed), y - 95, X(ed), y + 10, { style: "stroke:var(--ink)", "stroke-width": 3, "stroke-dasharray": "6 4" });
-    V.text(g, X(ed), y + 28, `expected depth Σ $w$_i $t$_i = ${ed.toFixed(2)}`, { size: 18, weight: 700 });
+    V.line(g, X(ed), y - 90, X(ed), y + 10, { style: "stroke:var(--ink)", "stroke-width": 3, "stroke-dasharray": "6 4" });
+    V.text(g, X(ed), y + 30, `expected depth Σ $w$_i $t$_i = ${ed.toFixed(2)}`, { size: 22, weight: 700 });
     return g;
   };
   ray(160, t => Math.exp(-((t - .7) ** 2) / .0005), "surface: weights peak at t = 0.70 → good depth", "green");
   const b = fadeIn(ray(370, t => Math.exp(-((t - .7) ** 2) / .0005) + .8 * Math.exp(-((t - .32) ** 2) / .0008), "floater in front: two peaks → depth 0.52 lies in empty space", "red"));
-  V.text(svg, 1220, 200, "depth and meshes can be\nextracted, but nothing forces\nthe density to form a clean\nsurface — SDF-based variants\n(NeuS, VolSDF) do", { size: 18, cls: "muted" });
+  V.text(svg, 1225, 215, "depth and meshes can be\nextracted, but nothing\nforces the density to\nform a clean surface —\nSDF-based variants\n(NeuS, VolSDF) do", { size: 22, cls: "muted" });
   return { steps: 1, set(s) { V.show(b, s >= 1); } };
 };
 
@@ -226,15 +226,15 @@ VIZ.nerfDepth = host => {
 VIZ.whyGS = host => {
   const svg = V.svg(host, 1400, 420);
   const A = V.g(svg), B = fadeIn(V.g(svg));
-  V.text(A, 340, 30, "NeRF: ask the network at every sample", { size: 21, weight: 700 });
+  V.text(A, 330, 30, "NeRF: ask the network at every sample", { size: 23, weight: 700 });
   for (let r = 0; r < 6; r++) { const y = 80 + r * 36; V.line(A, 60, y, 560, y + (r - 2.5) * 10, { style: "stroke:var(--magenta)", opacity: .6 }); range(14).forEach(i => V.circle(A, 60 + i * 36, y + (r - 2.5) * 10 * i / 14, 3.5, { style: "fill:var(--magenta)" })); }
-  V.text(A, 330, 345, "1920 × 1080 pixels × ~200 samples\n≈ 400 million network queries per frame", { size: 20, weight: 700, fill: "var(--red)" });
-  V.text(B, 1050, 30, "3DGS: project each primitive once", { size: 21, weight: 700 });
+  V.text(A, 330, 345, "1920 × 1080 pixels × ~200 samples\n≈ 400 million network queries per frame", { size: 22, weight: 700, fill: "var(--red)" });
+  V.text(B, 1050, 30, "3DGS: project each primitive once", { size: 23, weight: 700 });
   reseed(8); range(26).forEach(() => {
     const cx = 820 + rnd() * 460, cy = 90 + rnd() * 190;
     V.el("ellipse", { cx, cy, rx: 10 + rnd() * 40, ry: 6 + rnd() * 18, transform: `rotate(${(rnd() * 180).toFixed(0)} ${cx} ${cy})`, style: `fill:var(--${["blue", "orange", "green", "violet"][Math.floor(rnd() * 4)]});fill-opacity:.35` }, B);
   });
-  V.text(B, 1050, 345, "a few million Gaussians, sorted and blended\non the GPU: real time at 1080p", { size: 20, weight: 700, fill: "var(--green)" });
+  V.text(B, 1050, 345, "a few million Gaussians, sorted and blended\non the GPU: real time at 1080p", { size: 22, weight: 700, fill: "var(--green)" });
   return { steps: 1, set(s) { V.show(B, s >= 1); } };
 };
 
@@ -253,8 +253,8 @@ VIZ.gaussParams = host => {
     const S = [[c * c * a + s * s * b, c * s * (a - b)], [c * s * (a - b), s * s * a + c * c * b]];
     V.text(mat, 960, 60, "$**Σ**$ = $**R**$ $**S**$ $**S**$^T $**R**$^T", { size: 26 });
     V.text(mat, 960, 140, `$**Σ**$ = [ ${S[0][0].toFixed(2)}  ${S[0][1].toFixed(2)} ; ${S[1][0].toFixed(2)}  ${S[1][1].toFixed(2)} ]`, { size: 22 });
-    V.text(mat, 960, 220, "rotation $**R**$ and scales $**S**$ are optimized,\nso $**Σ**$ always stays a valid covariance", { size: 18, cls: "muted" });
-    V.text(mat, 960, 300, `opacity α = ${v.o.toFixed(2)} · colour: spherical harmonics`, { size: 19 });
+    V.text(mat, 960, 218, "rotation $**R**$ and scales $**S**$ are optimized,\nso $**Σ**$ always stays a valid covariance", { size: 22, cls: "muted" });
+    V.text(mat, 960, 298, `opacity α = ${v.o.toFixed(2)} · colour: spherical harmonics`, { size: 22 });
   };
   const sl = sliders(host, [{ k: "sx", label: "scale 1", min: .3, max: 5, step: .1, v: 3.2 }, { k: "sy", label: "scale 2", min: .3, max: 5, step: .1, v: 1 }, { k: "r", label: "rotation", min: 0, max: 180, step: 5, v: 25 }, { k: "o", label: "opacity", min: .1, max: 1, step: .05, v: .9 }], upd);
   upd(sl.vals);
@@ -266,10 +266,10 @@ VIZ.projectGauss = host => {
   const C = [100, 220];
   cam(svg, C[0], C[1], 0, 70, "blue", "");
   V.line(svg, C[0] + 70, 100, C[0] + 70, 340, { style: "stroke:var(--blue)", "stroke-width": 4 });
-  V.text(svg, C[0] + 70, 365, "image plane", { size: 17, cls: "muted" });
-  V.rect(svg, 1040, 60, 320, 260, "cell", { rx: 6 }); V.text(svg, 1200, 40, "2D splat in the image", { size: 19, weight: 700 });
+  V.text(svg, C[0] + 70, 367, "image plane", { size: 21, cls: "muted" });
+  V.rect(svg, 1040, 60, 320, 260, "cell", { rx: 6 }); V.text(svg, 1200, 36, "2D splat in the image", { size: 23, weight: 700 });
   const live = V.g(svg), img = V.g(svg);
-  V.text(svg, 700, 405, "$**Σ**$′ = $**J**$ $**W**$ $**Σ**$ $**W**$^T $**J**$^T   (W: world → camera, J: Jacobian of the projection)", { size: 20 });
+  V.text(svg, 700, 405, "$**Σ**$′ = $**J**$ $**W**$ $**Σ**$ $**W**$^T $**J**$^T   (W: world → camera, J: Jacobian of the projection)", { size: 22 });
   const lp = V.loop(t => {
     const z = 520 + 260 * Math.sin(t * .6), ang = t * 40, y = 220 + 40 * Math.sin(t * .9), sx = 80, sy = 30;
     live.innerHTML = ""; img.innerHTML = "";
@@ -285,11 +285,11 @@ VIZ.alphaBlend = host => {
   const svg = V.svg(host, 1400, 430);
   const S = [["blue", .6, 120], ["orange", .5, 250], ["green", .7, 380], ["violet", .9, 510]];
   const px = [700, 210];
-  V.text(svg, 300, 22, "splats overlapping one pixel, sorted front to back", { size: 20, weight: 700 });
+  V.text(svg, 320, 22, "splats overlapping one pixel, sorted front to back", { size: 23, weight: 700 });
   const G = S.map(([c, a, x], i) => {
     const g = fadeIn(V.g(svg));
     V.el("ellipse", { cx: x + 100, cy: 210, rx: 120, ry: 70, style: `fill:var(--${c});fill-opacity:${a * .6};stroke:var(--${c});stroke-width:2` }, g);
-    V.text(g, x + 100, 300, `α = ${a}`, { size: 18 });
+    V.text(g, x + 100, 302, `α = ${a}`, { size: 22 });
     return g;
   });
   V.circle(svg, 640, 210, 8, { style: "fill:var(--ink)" });
@@ -298,50 +298,50 @@ VIZ.alphaBlend = host => {
   const tab = S.map(([c], i) => {
     const g = fadeIn(V.g(svg)), [, a, Ti, w] = rows[i];
     V.rect(g, 860, 80 + i * 60, 34, 34, "", { style: `fill:var(--${c})` });
-    V.text(g, 910, 97 + i * 60, `$T$ = ${Ti.toFixed(3)}   $w$ = $T$α = ${w.toFixed(3)}`, { size: 20, anchor: "start" });
+    V.text(g, 910, 97 + i * 60, `$T$ = ${Ti.toFixed(3)}   $w$ = $T$α = ${w.toFixed(3)}`, { size: 23, anchor: "start" });
     return g;
   });
-  const f = fadeIn(V.text(svg, 1050, 360, "$C$ = Σ $c$_i α_i Π_{j<i}(1 − α_j)\n— the same formula as NeRF's volume rendering", { size: 21, weight: 700, fill: "var(--blue)" }));
+  const f = fadeIn(V.text(svg, 1050, 360, "$C$ = Σ $c$_i α_i Π_{j<i}(1 − α_j)\n— the same formula as NeRF's volume rendering", { size: 23, weight: 700, fill: "var(--blue)" }));
   return { steps: 4, set(s) { G.forEach((g, i) => V.show(g, i < s || s === 0)); tab.forEach((g, i) => V.show(g, i < s)); V.show(f, s >= 4); } };
 };
 
 VIZ.gsPipeline = flow({
   w: 1400, h: 360, nodes: [
-    { id: "a", x: 0, y: 130, w: 200, h: 100, label: "SfM / SLAM\n~points + poses" },
-    { id: "b", x: 260, y: 130, w: 200, h: 100, label: "initial\n~Gaussians", cls: "blue", step: 1 },
-    { id: "c", x: 520, y: 130, w: 200, h: 100, label: "rasterize\n~a training view", step: 2 },
-    { id: "d", x: 780, y: 130, w: 200, h: 100, label: "loss vs.\n~the photo", step: 2 },
-    { id: "e", x: 1040, y: 130, w: 200, h: 100, label: "gradients →\n~all parameters", cls: "blue", step: 3 },
-    { id: "f", x: 780, y: 280, w: 200, h: 70, label: "densify / prune", cls: "good", step: 4 }],
+    { id: "a", x: 0, y: 125, w: 200, h: 110, label: "SfM / SLAM\n~points + poses", size: 24 },
+    { id: "b", x: 260, y: 125, w: 200, h: 110, label: "initial\n~Gaussians", cls: "blue", step: 1, size: 24 },
+    { id: "c", x: 520, y: 125, w: 200, h: 110, label: "rasterize\n~a training view", step: 2, size: 24 },
+    { id: "d", x: 780, y: 125, w: 200, h: 110, label: "loss vs.\n~the photo", step: 2, size: 24 },
+    { id: "e", x: 1040, y: 125, w: 200, h: 110, label: "gradients →\n~all parameters", cls: "blue", step: 3, size: 24 },
+    { id: "f", x: 780, y: 280, w: 200, h: 70, label: "densify / prune", cls: "good", step: 4, size: 24 }],
   edges: [{ a: "a", b: "b", step: 1 }, { a: "b", b: "c", step: 2 }, { a: "c", b: "d", step: 2 }, { a: "d", b: "e", step: 3 },
-  { a: "e", b: "c", d: "M1140,125 Q880,20 620,125", color: "magenta", step: 3, label: "repeat ~30 000 times", lx: 880, ly: 55 },
-  { a: "e", b: "f", d: "M1140,235 L1140,315 L985,315", step: 4 }],
+  { a: "e", b: "c", d: "M1140,120 Q880,20 620,120", color: "magenta", step: 3, label: "repeat ~30 000 times", lx: 880, ly: 44, size: 22 },
+  { a: "e", b: "f", d: "M1140,240 L1140,315 L985,315", step: 4 }],
 });
 
 VIZ.densify = host => {
   const svg = V.svg(host, 1400, 430);
   const F = frame(40, 40, 860, 360);
   drawContour(svg, F, "rule", 2);
-  const st = [[6, "start: few Gaussians from sparse SfM points"], [14, "clone small ones where detail is missing"], [30, "split large ones that cover too much"], [60, "prune nearly transparent ones; detail where needed"]];
-  const g = V.g(svg), t = V.text(svg, 1150, 160, "", { size: 22, weight: 700 }), n = V.text(svg, 1150, 240, "", { size: 20, cls: "muted" });
-  V.text(svg, 1150, 330, "illustration on the 2D cross-section", { size: 16, cls: "muted" });
-  return { steps: 3, set(s) { g.innerHTML = ""; gaussFit(st[s][0]).forEach(e => ellipse(g, F, e)); V.setText(t, st[s][1]); V.setText(n, `${st[s][0]} primitives`); } };
+  const st = [[6, "start: few Gaussians\nfrom sparse SfM points"], [14, "clone small ones where\ndetail is missing"], [30, "split large ones that\ncover too much"], [60, "prune nearly transparent\nones; detail where needed"]];
+  const g = V.g(svg), t = V.g(svg), n = V.text(svg, 1150, 250, "", { size: 22, cls: "muted" });
+  V.text(svg, 1150, 340, "illustration on the\n2D cross-section", { size: 21, cls: "muted" });
+  return { steps: 3, set(s) { g.innerHTML = ""; gaussFit(st[s][0]).forEach(e => ellipse(g, F, e)); t.innerHTML = ""; V.text(t, 1150, 160, st[s][1], { size: 24, weight: 700 }); V.setText(n, `${st[s][0]} primitives`); } };
 };
 
 VIZ.gsGeometry = host => {
   const svg = V.svg(host, 1400, 430);
   const FA = frame(30, 50, 620, 320), FB = frame(740, 50, 620, 320);
-  V.text(svg, 340, 25, "3DGS: blobs explain the images", { size: 21, weight: 700 });
+  V.text(svg, 340, 25, "3DGS: blobs explain the images", { size: 23, weight: 700 });
   drawContour(svg, FA, "ink", 2.5);
   gaussFit(24).forEach(e => { ellipse(svg, FA, e); V.circle(svg, FA.X(e.c[0]), FA.Y(e.c[1]), 3, { style: "fill:var(--ink)" }); });
-  V.text(svg, 340, 405, "centres lie inside the object, not on its surface", { size: 18, cls: "muted" });
+  V.text(svg, 340, 405, "centres lie inside the object, not on its surface", { size: 22, cls: "muted" });
   const B = fadeIn(V.g(svg));
-  V.text(B, 1050, 25, "surface-aligned (2DGS, SuGaR, …)", { size: 21, weight: 700 });
+  V.text(B, 1050, 25, "surface-aligned (2DGS, SuGaR, …)", { size: 23, weight: 700 });
   drawContour(B, FB, "ink", 2.5);
   SEGS.filter((_, i) => i % 9 === 0).forEach(s => {
     const cx = (s[0] + s[2]) / 2, cy = (s[1] + s[3]) / 2, ang = Math.atan2(s[3] - s[1], s[2] - s[0]);
     V.el("ellipse", { cx: FB.X(cx), cy: FB.Y(cy), rx: 18, ry: 3.5, transform: `rotate(${-ang * 180 / Math.PI} ${FB.X(cx)} ${FB.Y(cy)})`, style: "fill:var(--green);fill-opacity:.55;stroke:var(--green)" }, B);
   });
-  V.text(B, 1050, 405, "flat discs on the surface: geometry can be extracted", { size: 18, cls: "muted" });
+  V.text(B, 1050, 405, "flat discs on the surface: geometry can be extracted", { size: 22, cls: "muted" });
   return { steps: 1, set(s) { V.show(B, s >= 1); } };
 };

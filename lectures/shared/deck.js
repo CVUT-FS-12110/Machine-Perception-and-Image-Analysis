@@ -47,7 +47,7 @@ const V = {
       const t = V.el("text", {
         x, y: y + (i - (lines.length - 1) / 2) * size * lh,
         "font-size": size, "text-anchor": o.anchor || "middle",
-        class: o.cls || null, fill: o.fill || null, "font-weight": o.weight || null,
+        class: o.cls || null, style: o.fill ? `fill:${o.fill}` : null, "font-weight": o.weight || null,
       }, g);
       V._rich(t, ln, size);
     });
@@ -91,12 +91,12 @@ const V = {
     V.rect(g, x, y, w, h, cls, { rx: 7 });
     const lines = String(label || "").split("\n");
     const size = o.size || 22;
-    const hs = lines.map(l => (l.startsWith("~") ? size * 0.78 : size) * 1.22);
+    const hs = lines.map(l => (l.startsWith("~") ? size * 0.86 : size) * 1.22);
     let cy = y + h / 2 - hs.reduce((a, b) => a + b, 0) / 2;
     lines.forEach((l, i) => {
       const small = l.startsWith("~");
       V.text(g, x + w / 2, cy + hs[i] / 2, small ? l.slice(1) : l,
-        { size: small ? size * 0.78 : size, cls: small ? "muted" : null, weight: o.weight && !small ? o.weight : null });
+        { size: small ? size * 0.86 : size, cls: small ? "muted" : null, weight: o.weight && !small ? o.weight : null });
       cy += hs[i];
     });
     return g;

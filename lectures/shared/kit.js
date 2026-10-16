@@ -25,11 +25,11 @@ function flow(spec) {
       }
       const g = V.g(edgesG, { class: "fade" });
       V.curveArrow(g, d, e.color || "blue", e.dash ? { "stroke-dasharray": "8 6" } : {});
-      if (e.label) V.text(g, e.lx, e.ly, e.label, { size: e.size || 18, cls: "muted" });
+      if (e.label) V.text(g, e.lx, e.ly, e.label, { size: e.size || 20, cls: "muted" });
       if (e.step) staged.push([e.step, g]);
     });
     (spec.texts || []).forEach(t => {
-      const g = V.text(svg, t.x, t.y, t.t, { size: t.size || 20, cls: t.cls || "muted", anchor: t.anchor, weight: t.weight });
+      const g = V.text(svg, t.x, t.y, t.t, { size: t.size || 22, cls: t.cls || "muted", anchor: t.anchor, weight: t.weight });
       g.classList.add("fade");
       if (t.step) staged.push([t.step, g]);
     });
@@ -99,8 +99,8 @@ function sliders(host, defs, onChange) {
 
 function plotAxes(p, X, Y, x0, x1, y0, y1, xl, yl) {
   V.path(p, `M${X(x0)},${Y(y0)} L${X(x1)},${Y(y0)} M${X(x0)},${Y(y0)} L${X(x0)},${Y(y1)}`, "axis", { "marker-end": "url(#ah-muted)" });
-  if (xl) V.text(p, X(x1) + 12, Y(y0), xl, { size: 20, anchor: "start", cls: "muted" });
-  if (yl) V.text(p, X(x0), Y(y1) - 18, yl, { size: 20, cls: "muted" });
+  if (xl) V.text(p, X(x1) + 12, Y(y0), xl, { size: 22, anchor: "start", cls: "muted" });
+  if (yl) V.text(p, X(x0), Y(y1) - 18, yl, { size: 22, cls: "muted" });
 }
 
 /* Highlights one table row per step: <div data-viz="rowSteps"><table>…</table></div>. */

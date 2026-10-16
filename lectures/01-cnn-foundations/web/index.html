@@ -94,12 +94,12 @@
   <li>ReLU = max(0, <span class="m">z</span>) is the default in CNNs: cheap, with well-behaved gradients.</li></ul>
   <div class="viz" data-viz="nonlinearity"></div></div></section>
 
-<section class="slide" data-part="1"><h2>Fully Connected Networks on Images</h2><div class="body"><div class="cols">
+<section class="slide" data-part="1"><h2>Fully Connected Networks on Images</h2><div class="body">
   <ul><li>The image is flattened into one long vector.</li>
   <li>Every input pixel is connected to every unit of the next layer.</li>
   <li>224 × 224 × 3 inputs → 1000 units: <b>150 million</b> weights in one layer.</li>
   <li>Flattening also throws away which pixels are neighbours.</li></ul>
-  <div class="viz" data-viz="fcImage"></div></div></div></section>
+  <div class="viz" data-viz="fcImage"></div></div></section>
 
 <section class="slide" data-part="1"><h2>The Same Pattern at Another Position</h2><div class="body">
   <ul><li>A fully connected layer has a separate weight for every pixel index.</li>

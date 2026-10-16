@@ -56,18 +56,18 @@ function cam(p, x, y, a, s = 40, color = "blue", label) {
   const L = [x + s * (c - half * -si), y + s * (si - half * c)], R = [x + s * (c + half * -si), y + s * (si + half * c)];
   V.path(g, `M${x},${y} L${L[0]},${L[1]} L${R[0]},${R[1]} Z`, "", { style: `fill:var(--${color}-soft);stroke:var(--${color});stroke-width:2.5` });
   V.circle(g, x, y, 5, { style: `fill:var(--${color})` });
-  if (label) V.text(g, x - 30 * c, y - 30 * si, label, { size: 18, weight: 700, fill: `var(--${color})` });
+  if (label) { const off = 24 + Math.abs(c) * label.length * 6; V.text(g, x - off * c, y - off * si, label, { size: 21, weight: 700, fill: `var(--${color})` }); }
   return g;
 }
 const heat = v => { const t = clamp(v, -1, 1); return t < 0 ? `rgba(194,24,122,${(-t * .75).toFixed(2)})` : `rgba(0,112,186,${(t * .75).toFixed(2)})`; };
 
 /* ------------------------------------------------------------ Part 1 */
 VIZ.goals3 = flow({
-  w: 1400, h: 200, nodes: [
-    { id: "a", x: 0, y: 40, w: 300, h: 120, label: "**REPRESENT**\n~points, meshes, fields,\n~Gaussians", cls: "blue" },
-    { id: "b", x: 365, y: 40, w: 300, h: 120, label: "**LEARN DEPTH**\n~stereo, MVS,\n~monocular" },
-    { id: "c", x: 730, y: 40, w: 300, h: 120, label: "**OPTIMIZE A SCENE**\n~NeRF, 3DGS, 4D" },
-    { id: "d", x: 1095, y: 40, w: 300, h: 120, label: "**EVALUATE HONESTLY**\n~geometry, not only\n~pretty pictures", cls: "good" }],
+  w: 1400, h: 210, nodes: [
+    { id: "a", x: 0, y: 35, w: 300, h: 140, label: "**REPRESENT**\n~points, meshes, fields,\n~Gaussians", cls: "blue", size: 25 },
+    { id: "b", x: 365, y: 35, w: 300, h: 140, label: "**LEARN DEPTH**\n~stereo, MVS,\n~monocular", size: 25 },
+    { id: "c", x: 730, y: 35, w: 300, h: 140, label: "**OPTIMIZE A SCENE**\n~NeRF, 3DGS, 4D", size: 25 },
+    { id: "d", x: 1095, y: 35, w: 300, h: 140, label: "**EVALUATE HONESTLY**\n~geometry, not only\n~pretty pictures", cls: "good", size: 25 }],
   edges: [{ a: "a", b: "b" }, { a: "b", b: "c" }, { a: "c", b: "d" }],
 });
 
@@ -75,10 +75,10 @@ VIZ.roadmap3 = flow({
   w: 1400, h: 260, nodes: [
     ["1", "**1 From VSLAM**\n**to dense 3D**", "blue"], ["2", "**2 Representing**\n**3D**"], ["3", "**3 Learned**\n**depth**"], ["4", "**4 Neural**\n**radiance fields**"],
     ["5", "**5 Gaussian**\n**splatting**"], ["6", "**6 Dynamic**\n**scenes (4D)**"], ["7", "**7 Evaluation**\n**and practice**", "good"]]
-    .map(([id, label, cls], i) => ({ id, x: i * 204, y: 30, w: 176, h: 110, label, cls, size: 20 })),
+    .map(([id, label, cls], i) => ({ id, x: i * 204, y: 30, w: 176, h: 110, label, cls, size: 22 })),
   edges: ["1", "2", "3", "4", "5", "6"].map(a => ({ a, b: String(+a + 1) })),
   texts: [["what SLAM gives,\nwhat it does not"], ["points, voxels,\nSDF, fields"], ["cost volumes,\nplane sweep"], ["volume\nrendering"], ["explicit\nprimitives"], ["deformation,\ntime"], ["metrics,\npipelines"]]
-    .map(([t], i) => ({ x: 88 + i * 204, y: 195, t, size: 18 })),
+    .map(([t], i) => ({ x: 88 + i * 204, y: 200, t, size: 21 })),
 });
 
 /* The rendered workshop scene with its "troublemakers" labelled (pixel positions projected from the 3D scene). */
@@ -94,7 +94,7 @@ VIZ.sceneIntro = host => {
     V.circle(g, x, y, 9, { style: `fill:var(--${c});stroke:#fff;stroke-width:3` });
     V.path(g, `M${x},${y} L${790},${ty + 12}`, "", { style: `stroke:var(--${c});stroke-width:2;fill:none;opacity:.8` });
     V.text(g, 800, ty, t, { size: 22, weight: 700, anchor: "start", fill: `var(--${c})` });
-    V.text(g, 800, ty + 28, n, { size: 18, anchor: "start", cls: "muted" });
+    V.text(g, 800, ty + 30, n, { size: 21, anchor: "start", cls: "muted" });
     return g;
   });
   return { steps: 5, set(st) { G.forEach((g, i) => V.show(g, i < st)); } };
@@ -131,7 +131,7 @@ VIZ.reconGoals = host => {
   const P = [["GEOMETRY", "where is the surface?"], ["APPEARANCE", "how does it look from here?"], ["DYNAMICS", "how does it change in time?"]].map(([t, s], i) => {
     const g = fadeIn(V.g(svg)), x = i * 470;
     V.rect(g, x, 0, 430, 410, "cell", { rx: 8 });
-    V.text(g, x + 215, 30, t, { size: 22, weight: 700 }); V.text(g, x + 215, 380, s, { size: 20, cls: "muted" });
+    V.text(g, x + 215, 30, t, { size: 22, weight: 700 }); V.text(g, x + 215, 380, s, { size: 22, cls: "muted" });
     return g;
   });
   const F0 = frame(20, 60, 390, 290), F1 = frame(490, 60, 390, 290), F2 = frame(960, 60, 390, 290);
@@ -174,13 +174,13 @@ VIZ.rayAmbiguity = host => {
   const C = [120, 210];
   cam(svg, C[0], C[1], 0, 70, "blue", "camera");
   V.line(svg, C[0] + 70, 150, C[0] + 70, 270, { style: "stroke:var(--blue)", "stroke-width": 4 });
-  V.text(svg, C[0] + 70, 295, "image", { size: 17, cls: "muted" });
+  V.text(svg, C[0] + 70, 297, "image", { size: 21, cls: "muted" });
   V.circle(svg, C[0] + 70, 210 - 10, 7, { style: "fill:var(--magenta)" });
   const dir = [1, -10 / 70], L = Math.hypot(...dir), u = [dir[0] / L, dir[1] / L];
   V.path(svg, `M${C[0]},${C[1]} L${C[0] + u[0] * 1180},${C[1] + u[1] * 1180}`, "", { style: "stroke:var(--magenta);stroke-width:2.5;stroke-dasharray:10 7" });
   const obj = V.g(svg);
-  const lbl = V.text(svg, 1050, 360, "", { size: 21 });
-  V.text(svg, 700, 405, "every point on the ray projects to the same pixel: one image does not determine depth", { size: 21, weight: 700, fill: "var(--blue)" });
+  const lbl = V.text(svg, 1050, 358, "", { size: 22 });
+  V.text(svg, 700, 405, "every point on the ray projects to the same pixel: one image does not determine depth", { size: 22, weight: 700, fill: "var(--blue)" });
   const lp = V.loop(t => {
     const s = .25 + .3 * (1 + Math.sin(t * .9)), d = 1250 * s;
     const p = [C[0] + u[0] * d, C[1] + u[1] * d], r = d * .07;
@@ -194,8 +194,8 @@ VIZ.rayAmbiguity = host => {
 VIZ.triangulation = host => {
   host.style.flexDirection = "column";
   const svg = V.svg(host, 1400, 360);
-  const g = V.g(svg), info = V.text(svg, 1180, 140, "", { size: 22 });
-  V.text(svg, 1180, 250, "each ray is known only within\n± 0.25° (pixel noise);\nthe overlap is where the point can be", { size: 18, cls: "muted" });
+  const g = V.g(svg), info = V.text(svg, 1140, 90, "", { size: 22 }), info2 = V.text(svg, 1140, 128, "", { size: 24, weight: 700 });
+  V.text(svg, 1140, 250, "each ray is known only within\n± 0.25° (pixel noise);\nthe overlap is where\nthe point can be", { size: 21, cls: "muted" });
   const upd = v => {
     g.innerHTML = "";
     const k = 34, P = [520, 340 - v.z * k], B = v.b * k;
@@ -208,7 +208,7 @@ VIZ.triangulation = host => {
     V.circle(g, P[0], P[1], 7, { style: "fill:var(--magenta)" });
     V.line(g, A[0], 352, Bc[0], 352, { style: "stroke:var(--ink)", "stroke-width": 2 }); V.text(g, 520, 345 + 0, "", {});
     const dz = v.z * v.z / v.b * (.25 * Math.PI / 180) * 2;
-    V.setText(info, `depth ${v.z} m, baseline ${v.b} m → depth uncertainty ≈ ${(dz * 100).toFixed(1)} cm`);
+    V.setText(info, `depth ${v.z} m, baseline ${v.b} m`); V.setText(info2, `→ depth uncertainty ≈ ${(dz * 100).toFixed(1)} cm`);
   };
   const sl = sliders(host, [{ k: "b", label: "baseline [m]", min: .5, max: 8, step: .5, v: 2 }, { k: "z", label: "depth [m]", min: 2, max: 9, step: .5, v: 7 }], upd);
   upd(sl.vals);
@@ -217,7 +217,7 @@ VIZ.triangulation = host => {
 
 /* ------------------------------------------------------------ Part 2 */
 function panel(p, x, y, w, h, title) {
-  const g = V.g(p); V.rect(g, x, y, w, h, "cell", { rx: 8 }); V.text(g, x + w / 2, y + 24, title, { size: 20, weight: 700 }); return g;
+  const g = V.g(p); V.rect(g, x, y, w, h, "cell", { rx: 8 }); V.text(g, x + w / 2, y + 22, title, { size: 22, weight: 700 }); return g;
 }
 function drawRepr(kind, p, F, opt = {}) {
   const [x0, x1, y0, y1] = DOM;
@@ -270,7 +270,7 @@ VIZ.reprZoo = host => {
   const K = [["points", "point cloud"], ["mesh", "mesh"], ["voxel", "voxels"], ["sdf", "signed distance"], ["density", "density field"], ["gauss", "Gaussians"]];
   const G = K.map(([k, t], i) => {
     const x = (i % 3) * 470, y = Math.floor(i / 3) * 222, g = fadeIn(panel(svg, x, y, 450, 212, t));
-    drawRepr(k, g, frame(x + 15, y + 40, 420, 165));
+    drawRepr(k, g, frame(x + 15, y + 44, 420, 162));
     return g;
   });
   return { steps: 5, set(s) { G.forEach((g, i) => V.show(g, i <= s)); } };
@@ -289,7 +289,7 @@ VIZ.pointCloud = host => {
   const A = fadeIn(V.g(svg)), B = fadeIn(V.g(svg));
   pts.forEach(([x, y]) => { if (vis(x, y, ca)) V.circle(A, F.X(x), F.Y(y), 3, { style: "fill:var(--blue)" }); else if (vis(x, y, cb)) V.circle(B, F.X(x), F.Y(y), 3, { style: "fill:var(--orange)" }); });
   cam(svg, ca[0], ca[1], .55, 46, "blue", "scan 1"); const cB = fadeIn(cam(svg, cb[0], cb[1], Math.PI - .55, 46, "orange", "scan 2"));
-  V.text(svg, 700, 425, "only surfaces seen by a sensor get points; the bottom is never observed", { size: 20, cls: "muted" });
+  V.text(svg, 700, 423, "only surfaces seen by a sensor get points; the bottom is never observed", { size: 22, cls: "muted" });
   return { steps: 2, set(s) { V.show(A, s >= 1); V.show(B, s >= 2); V.show(cB, s >= 2); } };
 };
 
@@ -298,9 +298,9 @@ VIZ.meshViz = host => {
   const F = frame(60, 30, 800, 370);
   drawRepr("mesh", svg, F);
   V.el("path", { d: `M${F.X(-2)},${F.Y(-.95)} L${F.X(2)},${F.Y(-.95)}`, stroke: "var(--green)", "stroke-width": 3, "marker-end": "url(#ah-green)", "marker-start": "url(#ah-green-s)" }, svg);
-  V.text(svg, F.X(0), F.Y(-.95) + 26, "dimensions can be measured directly", { size: 19, fill: "var(--green)", weight: 700 });
-  V.text(svg, 1130, 120, "2D analogy: vertices + edges\n(3D: vertices + triangles)", { size: 21 });
-  V.text(svg, 1130, 260, "explicit surface: inside/outside,\nnormals, collisions, rendering", { size: 21, cls: "muted" });
+  V.text(svg, F.X(0), F.Y(-.95) + 28, "dimensions can be measured directly", { size: 22, fill: "var(--green)", weight: 700 });
+  V.text(svg, 1130, 120, "2D analogy: vertices + edges\n(3D: vertices + triangles)", { size: 23 });
+  V.text(svg, 1130, 260, "explicit surface: inside/outside,\nnormals, collisions, rendering", { size: 22, cls: "muted" });
 };
 
 VIZ.voxelMem = host => {
@@ -317,7 +317,7 @@ VIZ.voxelMem = host => {
       V.text(mem, 1000, 100 + i * 60, `${(cells / 1e6).toFixed(cells < 1e6 ? 3 : 1)} M cells`, { size: 22, anchor: "start" });
       V.text(mem, 1210, 100 + i * 60, mb < 1000 ? `${mb.toFixed(mb < 10 ? 1 : 0)} MB` : `${(mb / 1000).toFixed(1)} GB`, { size: 22, anchor: "start", fill: mb > 500 ? "var(--red)" : null, weight: 700 });
     });
-    V.text(mem, 1100, 335, "float32 per cell; 2× resolution = 8× memory", { size: 18, cls: "muted" });
+    V.text(mem, 1100, 332, "float32 per cell; 2× resolution = 8× memory", { size: 21, cls: "muted" });
   };
   const sl = sliders(host, [{ k: "n", label: "cells across", min: 8, max: 72, step: 4, v: 24 }], upd);
   upd(sl.vals);
@@ -334,9 +334,9 @@ VIZ.occupancy = host => {
   cam(svg, F.X(S[0]), F.Y(S[1]), Math.PI / 2, 40, "blue", "");
   const paint = () => L.forEach((l, k) => { const p = 1 / (1 + Math.exp(-l)); cells[k].style.fill = `hsl(0,0%,${(92 - p * 70).toFixed(0)}%)`; });
   V.text(svg, 1150, 80, "for every measured ray:", { size: 22, weight: 700 });
-  V.text(svg, 1150, 150, "cells it passes: more likely free\n(log-odds − 0.4)", { size: 20 });
-  V.text(svg, 1150, 240, "cell where it hits: more likely\noccupied (log-odds + 0.85)", { size: 20 });
-  V.text(svg, 1150, 340, "free space is information too", { size: 20, fill: "var(--blue)", weight: 700 });
+  V.text(svg, 1150, 150, "cells it passes: more likely free\n(log-odds − 0.4)", { size: 22 });
+  V.text(svg, 1150, 245, "cell where it hits: more likely\noccupied (log-odds + 0.85)", { size: 22 });
+  V.text(svg, 1150, 345, "free space is information too", { size: 22, fill: "var(--blue)", weight: 700 });
   const cast = a => {
     beam.innerHTML = "";
     const d = [Math.cos(a), Math.sin(a)]; let t = 0, hit = null;
@@ -359,9 +359,9 @@ VIZ.tsdf = host => {
   const svg = V.svg(host, 1400, 340);
   const g = V.g(svg);
   V.text(svg, 1150, 70, "signed distance to the surface", { size: 22, weight: 700 });
-  V.rect(svg, 1000, 110, 26, 26, "", { style: "fill:rgba(0,112,186,.7)" }); V.text(svg, 1040, 123, "outside (+)", { size: 20, anchor: "start" });
-  V.rect(svg, 1000, 150, 26, 26, "", { style: "fill:rgba(194,24,122,.7)" }); V.text(svg, 1040, 163, "inside (−)", { size: 20, anchor: "start" });
-  V.text(svg, 1150, 230, "the surface is the zero level set;\nfar from it the value is truncated\nto ± μ: only a thin band is stored", { size: 19, cls: "muted" });
+  V.rect(svg, 1000, 110, 26, 26, "", { style: "fill:rgba(0,112,186,.7)" }); V.text(svg, 1040, 123, "outside (+)", { size: 22, anchor: "start" });
+  V.rect(svg, 1000, 150, 26, 26, "", { style: "fill:rgba(194,24,122,.7)" }); V.text(svg, 1040, 163, "inside (−)", { size: 22, anchor: "start" });
+  V.text(svg, 1150, 230, "the surface is the zero level set;\nfar from it the value is truncated\nto ± μ: only a thin band is stored", { size: 21, cls: "muted" });
   const upd = v => { g.innerHTML = ""; drawRepr("sdf", g, frame(30, 10, 900, 320), { n: 90, mu: v.mu }); };
   const sl = sliders(host, [{ k: "mu", label: "truncation μ", min: .05, max: 1.5, step: .05, v: .3 }], upd);
   upd(sl.vals);
@@ -375,7 +375,7 @@ VIZ.quadtree = host => {
   V.rect(cp, F.X(DOM[0]), F.Y(DOM[3]), (DOM[1] - DOM[0]) * F.k, (DOM[3] - DOM[2]) * F.k);
   const g = V.g(svg, { "clip-path": "url(#qtclip)" }), info = V.text(svg, 1150, 120, "", { size: 22 });
   drawContour(svg, F, "ink", 2);
-  V.text(svg, 1150, 260, "split a cell only where the\nsurface passes through it\n(3D: octree)", { size: 20, cls: "muted" });
+  V.text(svg, 1150, 260, "split a cell only where the\nsurface passes through it\n(3D: octree)", { size: 22, cls: "muted" });
   const set = depth => {
     g.innerHTML = ""; let count = 0;
     const rec = (x, y, w, h, d) => {
@@ -397,10 +397,10 @@ VIZ.implicitField = host => {
   const F = frame(30, 20, 760, 400);
   drawContour(svg, F, "rule", 2);
   const q = V.g(svg);
-  V.box(svg, 900, 150, 140, 80, "($x$, $y$, $z$)", "box", { size: 22 }); V.arrow(svg, 1045, 190, 1095, 190);
-  V.box(svg, 1100, 140, 140, 100, "MLP\n~weights θ", "box blue", { size: 22 }); V.arrow(svg, 1245, 190, 1290, 190);
-  V.box(svg, 1295, 150, 90, 80, "$f$", "box good", { size: 26 });
-  V.text(svg, 1140, 320, "query any point, at any resolution;\nthe surface is where $f$ = 0\nthe whole scene is stored in θ", { size: 20 });
+  V.box(svg, 890, 150, 150, 80, "($x$, $y$, $z$)", "box", { size: 24 }); V.arrow(svg, 1045, 190, 1095, 190);
+  V.box(svg, 1100, 140, 140, 100, "MLP\n~weights θ", "box blue", { size: 25 }); V.arrow(svg, 1245, 190, 1290, 190);
+  V.box(svg, 1295, 150, 90, 80, "$f$", "box good", { size: 28 });
+  V.text(svg, 1140, 325, "query any point, at any resolution;\nthe surface is where $f$ = 0\nthe whole scene is stored in θ", { size: 22 });
   let k = 0;
   const lp = V.loop(t => {
     const want = Math.min(400, Math.floor(t * 40) % 480);
@@ -416,11 +416,11 @@ VIZ.radiance = host => {
   V.rect(svg, 200, 300, 520, 18, "", { style: "fill:#b7bec4" });
   V.circle(svg, P[0], P[1], 8, { style: "fill:var(--ink)" });
   const live = V.g(svg);
-  V.box(svg, 900, 70, 200, 80, "($**x**$, $**d**$)", "box", { size: 22 }); V.arrow(svg, 1105, 110, 1150, 110);
-  V.box(svg, 1155, 60, 230, 100, "($σ$, $**c**$)\n~density, colour", "box good", { size: 22 });
-  V.text(svg, 1140, 210, "the same 3D point has a different\ncolour from different directions\n(glossy, metallic surfaces)", { size: 20 });
+  V.box(svg, 900, 60, 200, 90, "($**x**$, $**d**$)", "box", { size: 24 }); V.arrow(svg, 1105, 105, 1150, 105);
+  V.box(svg, 1155, 50, 230, 110, "($σ$, $**c**$)\n~density, colour", "box good", { size: 25 });
+  V.text(svg, 1140, 212, "the same 3D point has a different\ncolour from different directions\n(glossy, metallic surfaces)", { size: 22 });
   const plot = V.g(svg);
-  const X = a => 880 + a / Math.PI * 400, Y = c => 410 - c * 110;
+  const X = a => 880 + a / Math.PI * 370, Y = c => 410 - c * 110;
   plotAxes(plot, X, Y, 0, Math.PI, 0, 1, "viewing angle", "brightness");
   const br = a => .25 + .7 * Math.exp(-((a - Math.PI * .62) ** 2) / .06);
   V.path(plot, V.pathFn(br, 0, Math.PI, X, Y, 100), "curve");
@@ -443,8 +443,8 @@ VIZ.gaussFitViz = host => {
   const F = frame(30, 10, 860, 320);
   const g = V.g(svg);
   drawContour(svg, F, "ink", 1.5);
-  V.text(svg, 1150, 70, "each primitive: centre, covariance\n(size + orientation), opacity, colour", { size: 20 });
-  V.text(svg, 1150, 210, "anisotropic ellipses follow thin\nand elongated structures; more\nprimitives = finer detail", { size: 19, cls: "muted" });
+  V.text(svg, 1150, 70, "each primitive: centre, covariance\n(size + orientation), opacity, colour", { size: 22 });
+  V.text(svg, 1150, 215, "anisotropic ellipses follow thin\nand elongated structures; more\nprimitives = finer detail", { size: 21, cls: "muted" });
   const upd = v => { g.innerHTML = ""; gaussFit(v.n).forEach(e => ellipse(g, F, e)); };
   const sl = sliders(host, [{ k: "n", label: "number of Gaussians", min: 4, max: 90, step: 2, v: 24 }], upd);
   upd(sl.vals);
@@ -454,13 +454,13 @@ VIZ.gaussFitViz = host => {
 /* ------------------------------------------------------------ Part 3 */
 VIZ.densePipe = flow({
   w: 1400, h: 260, nodes: [
-    { id: "a", x: 0, y: 80, w: 230, h: 100, label: "calibrated images\n~poses from SLAM / SfM" },
-    { id: "b", x: 300, y: 80, w: 230, h: 100, label: "depth map\n~per view (stereo / MVS)", cls: "blue", step: 1 },
-    { id: "c", x: 600, y: 80, w: 230, h: 100, label: "filter\n~consistency, confidence", step: 2 },
-    { id: "d", x: 900, y: 80, w: 230, h: 100, label: "fuse\n~points / TSDF", step: 3 },
-    { id: "e", x: 1200, y: 80, w: 190, h: 100, label: "surface\n~mesh", cls: "good", step: 3 }],
+    { id: "a", x: 0, y: 70, w: 250, h: 110, label: "calibrated images\n~poses from SLAM / SfM", size: 24 },
+    { id: "b", x: 300, y: 70, w: 250, h: 110, label: "depth map\n~per view (stereo / MVS)", cls: "blue", step: 1, size: 24 },
+    { id: "c", x: 600, y: 70, w: 250, h: 110, label: "filter\n~consistency, confidence", step: 2, size: 24 },
+    { id: "d", x: 900, y: 70, w: 220, h: 110, label: "fuse\n~points / TSDF", step: 3, size: 24 },
+    { id: "e", x: 1170, y: 70, w: 220, h: 110, label: "surface\n~mesh", cls: "good", step: 3, size: 24 }],
   edges: [{ a: "a", b: "b", step: 1 }, { a: "b", b: "c", step: 2 }, { a: "c", b: "d", step: 3 }, { a: "d", b: "e", step: 3 }],
-  texts: [{ x: 415, y: 225, t: "learning helps most here", step: 1, cls: "", size: 20, weight: 700 }],
+  texts: [{ x: 425, y: 220, t: "learning helps most here", step: 1, cls: "", size: 23, weight: 700 }],
 });
 
 VIZ.matchingCost = host => {
@@ -472,11 +472,11 @@ VIZ.matchingCost = host => {
     ["learned features", d => .15 + .8 * (1 - Math.exp(-((d - 12) ** 2) / 10)), "var(--green)"]];
   const G = cases.map(([t, f, c], i) => {
     const g = fadeIn(V.g(svg)), ox = 40 + (i % 2) * 680, oy = 20 + Math.floor(i / 2) * 210;
-    const X = d => ox + 60 + d * 22, Y = v => oy + 170 - v * 140;
+    const X = d => ox + 60 + d * 20, Y = v => oy + 170 - v * 140;
     plotAxes(g, X, Y, 0, 25, 0, 1.05, "disparity", "");
-    V.text(g, ox + 330, oy + 12, t, { size: 21, weight: 700, fill: c });
+    V.text(g, ox + 310, oy + 12, t, { size: 23, weight: 700, fill: c });
     V.path(g, V.pathFn(f, 0, 24, X, Y, 120), "", { style: `fill:none;stroke:${c};stroke-width:4` });
-    V.text(g, ox + 20, oy + 90, "cost", { size: 17, cls: "muted" });
+    V.text(g, ox + 18, oy + 90, "cost", { size: 21, cls: "muted" });
     return g;
   });
   return { steps: 3, set(s) { G.forEach((g, i) => V.show(g, i <= s)); } };
@@ -489,11 +489,11 @@ VIZ.disparity = host => {
   plotAxes(svg, X, Y, 0, 15.5, 0, 1.25, "depth $Z$ [m]", "error [m]");
   const err = z => z * z * .5 / (f * B);
   V.path(svg, V.pathFn(err, .2, 15, X, Y, 100), "curve");
-  [5, 10, 15].forEach(z => V.text(svg, X(z), 322, z, { size: 17, cls: "muted" }));
+  [5, 10, 15].forEach(z => V.text(svg, X(z), 322, z, { size: 21, cls: "muted" }));
   const dot = V.circle(svg, 0, 0, 9, { style: "fill:var(--magenta)" });
-  const t1 = V.text(svg, 1150, 80, "$Z$ = $f$ · $B$ / $d$", { size: 30 });
-  const t2 = V.text(svg, 1150, 160, "", { size: 21 }), t3 = V.text(svg, 1150, 210, "", { size: 21, weight: 700 });
-  V.text(svg, 1150, 245, "$f$ = 700 px, $B$ = 12 cm, matching error 0.5 px:\nerror grows with $Z$²", { size: 18, cls: "muted" });
+  const t1 = V.text(svg, 1160, 62, "$Z$ = $f$ · $B$ / $d$", { size: 30 });
+  const t2 = V.text(svg, 1160, 118, "", { size: 23 }), t3 = V.text(svg, 1160, 158, "", { size: 23, weight: 700 });
+  V.text(svg, 1160, 226, "$f$ = 700 px, $B$ = 12 cm,\nmatching error 0.5 px:\nerror grows with $Z$²", { size: 21, cls: "muted" });
   const upd = v => {
     dot.setAttribute("cx", X(v.z)); dot.setAttribute("cy", Y(err(v.z)));
     V.setText(t2, `disparity $d$ = ${(f * B / v.z).toFixed(1)} px`); V.setText(t3, `depth error ≈ ${(err(v.z) * 100).toFixed(1)} cm`);
@@ -510,15 +510,15 @@ VIZ.costVolume = host => {
     const o = k * 22;
     V.rect(svg, 60 + o, 120 - o * .7, 300, 220, "", { style: `fill:var(--blue-soft);stroke:var(--blue);stroke-width:1.5;fill-opacity:.85` });
   }
-  V.text(svg, 210, 380, "$H$ × $W$ (pixels)", { size: 20 }); V.text(svg, 380, 40, "$D$ disparity\nhypotheses", { size: 19, anchor: "start" });
+  V.text(svg, 210, 375, "$H$ × $W$ (pixels)", { size: 22 }); V.text(svg, 455, 330, "$D$ disparity\nhypotheses", { size: 22, anchor: "start" });
   const col = fadeIn(V.g(svg));
   for (let k = 0; k < D; k++) V.rect(col, 200 + k * 22, 220 - k * 22 * .7, 18, 18, "", { style: "fill:var(--magenta);stroke:#fff" });
-  V.text(col, 210, 255, "one pixel", { size: 18, fill: "var(--magenta)", weight: 700 });
+  V.text(col, 205, 290, "one pixel", { size: 22, fill: "var(--magenta)", weight: 700 });
   const plot = fadeIn(V.g(svg));
   const c = [.8, .7, .62, .3, .08, .25, .6, .75];
-  c.forEach((v, k) => { V.rect(plot, 640 + k * 60, 330 - v * 220, 44, v * 220, "", { style: `fill:var(--${k === 4 ? "green" : "magenta"})` }); V.text(plot, 662 + k * 60, 352, k, { size: 18 }); });
-  V.text(plot, 870, 390, "disparity $d$", { size: 19, cls: "muted" }); V.text(plot, 870, 80, "matching cost along $D$ for that pixel", { size: 21, weight: 700 });
-  V.text(plot, 1250, 220, "lowest cost\n→ disparity 4", { size: 20, fill: "var(--green)", weight: 700 });
+  c.forEach((v, k) => { V.rect(plot, 640 + k * 60, 330 - v * 220, 44, v * 220, "", { style: `fill:var(--${k === 4 ? "green" : "magenta"})` }); V.text(plot, 662 + k * 60, 354, k, { size: 22 }); });
+  V.text(plot, 870, 392, "disparity $d$", { size: 22, cls: "muted" }); V.text(plot, 870, 70, "matching cost along $D$ for that pixel", { size: 23, weight: 700 });
+  V.text(plot, 1250, 220, "lowest cost\n→ disparity 4", { size: 23, fill: "var(--green)", weight: 700 });
   return { steps: 2, set(s) { V.show(col, s >= 1); V.show(plot, s >= 2); } };
 };
 
@@ -527,13 +527,13 @@ VIZ.stereoNet = host => {
   const N = [["left / right\nimage", "3 × $H$ × $W$", "mut"], ["shared CNN\n~features (lecture 1–2)", "$C$ × $H$/4 × $W$/4", "blue"], ["cost volume\n~compare at each $d$", "$C$ × $D$/4 × $H$/4 × $W$/4", ""],
   ["3D convolutions\n~regularize", "$D$/4 × $H$/4 × $W$/4", "blue"], ["upsample +\n~soft-argmin", "$H$ × $W$ disparity", "good"]];
   const G = N.map(([l, s, c], i) => {
-    const g = fadeIn(V.g(svg)), x = i * 280;
-    V.box(g, x, 120, 230, 120, l, "box " + c, { size: 20 });
-    V.text(g, x + 115, 275, s, { size: 18, fill: "var(--blue)", weight: 700 });
-    if (i) V.arrow(g, x - 46, 180, x - 6, 180);
+    const g = fadeIn(V.g(svg)), x = i * 285;
+    V.box(g, x, 110, 250, 130, l, "box " + c, { size: 24 });
+    V.text(g, x + 125, 275, s, { size: 21, fill: "var(--blue)", weight: 700 });
+    if (i) V.arrow(g, x - 32, 175, x - 6, 175);
     return g;
   });
-  V.text(svg, 700, 380, "every step is differentiable: the whole network is trained end to end on disparity", { size: 20, cls: "muted" });
+  V.text(svg, 700, 380, "every step is differentiable: the whole network is trained end to end on disparity", { size: 22, cls: "muted" });
   return { steps: 4, set(s) { G.forEach((g, i) => V.show(g, i <= s)); } };
 };
 
@@ -542,22 +542,23 @@ VIZ.softArgmin = host => {
   const c = [2.4, 1.9, 1.2, .3, .1, .9, 1.8, 2.3], e = c.map(v => Math.exp(-2.5 * v)), S = e.reduce((a, b) => a + b), p = e.map(v => v / S);
   const dhat = p.reduce((a, v, d) => a + v * d, 0);
   const bars = (g, vals, ox, max, col, title) => {
-    V.text(g, ox + 230, 30, title, { size: 21, weight: 700 });
-    vals.forEach((v, k) => { V.rect(g, ox + k * 58, 300 - v / max * 220, 44, v / max * 220, "", { style: `fill:var(--${col})` }); V.text(g, ox + 22 + k * 58, 322, k, { size: 17 }); V.text(g, ox + 22 + k * 58, 285 - v / max * 220, v.toFixed(2), { size: 15 }); });
+    V.text(g, ox + BW * 3.5 + 25, 30, title, { size: 23, weight: 700 });
+    vals.forEach((v, k) => { V.rect(g, ox + k * BW, 300 - v / max * 210, 50, v / max * 210, "", { style: `fill:var(--${col})` }); V.text(g, ox + 25 + k * BW, 324, k, { size: 22 }); V.text(g, ox + 25 + k * BW, 284 - v / max * 210, v.toFixed(2), { size: 20 }); });
   };
-  bars(svg, c, 40, 2.5, "magenta", "cost $c$_d");
-  const P = fadeIn(V.g(svg)); bars(P, p, 600, Math.max(...p), "blue", "softmax(−$c$) = probability $p$_d");
-  V.arrow(svg, 520, 180, 585, 180);
+  const BW = 62, OX2 = 590;
+  bars(svg, c, 20, 2.5, "magenta", "cost $c$_d");
+  const P = fadeIn(V.g(svg)); bars(P, p, OX2, Math.max(...p), "blue", "softmax(−$c$) = probability $p$_d");
+  V.arrow(svg, 512, 180, 572, 180);
   const R = fadeIn(V.g(svg));
-  V.text(R, 1270, 140, "$d̂$ = Σ $d$ · $p$_d", { size: 26 });
-  V.text(R, 1270, 200, `= ${dhat.toFixed(2)}`, { size: 30, weight: 700, fill: "var(--green)" });
-  V.text(R, 1270, 290, "sub-pixel and differentiable,\nunlike a hard argmin", { size: 19, cls: "muted" });
-  V.line(R, 600 + dhat * 58 + 22, 60, 600 + dhat * 58 + 22, 300, { style: "stroke:var(--green)", "stroke-width": 3, "stroke-dasharray": "6 5" });
+  V.text(R, 1250, 140, "$d̂$ = Σ $d$ · $p$_d", { size: 28 });
+  V.text(R, 1250, 200, `= ${dhat.toFixed(2)}`, { size: 32, weight: 700, fill: "var(--green)" });
+  V.text(R, 1250, 290, "sub-pixel and\ndifferentiable, unlike\na hard argmin", { size: 22, cls: "muted" });
+  V.line(R, OX2 + dhat * BW + 25, 88, OX2 + dhat * BW + 25, 300, { style: "stroke:var(--green)", "stroke-width": 3, "stroke-dasharray": "6 5" });
   return { steps: 2, set(s) { V.show(P, s >= 1); V.show(R, s >= 2); } };
 };
 
 VIZ.planeSweep = host => {
-  const svg = V.svg(host, 1400, 440);
+  const svg = V.svg(host, 1400, 450);
   const ref = [200, 400], src = [[60, 330], [340, 330]], P = [230, 120];
   V.rect(svg, 120, 90, 240, 30, "", { style: "fill:#b7bec4" });
   cam(svg, ref[0], ref[1], -Math.PI / 2, 48, "blue", "ref");
@@ -567,9 +568,9 @@ VIZ.planeSweep = host => {
   const X = z => 560 + (z - 80) * 2.6, Y = v => 380 - v * 3.2;
   plotAxes(svg, X, Y, 80, 345, 0, 100, "plane depth", "disagreement");
   V.line(svg, X(280), Y(0), X(280), Y(95), { style: "stroke:var(--green)", "stroke-dasharray": "6 5" });
-  V.text(svg, X(280), Y(0) + 22, "true depth", { size: 17, fill: "var(--green)", weight: 700 });
+  V.text(svg, X(280), Y(0) + 26, "true depth", { size: 21, fill: "var(--green)", weight: 700 });
   const curve = V.path(svg, "", "", { style: "fill:none;stroke:var(--magenta);stroke-width:4" });
-  V.text(svg, 1050, 60, "sweep a plane through depth: where the source views agree,\nthe plane passes through the surface", { size: 19 });
+  V.text(svg, 1060, 40, "sweep a plane through depth: where the source\nviews agree, the plane passes through the surface", { size: 22 });
   const dis = z => { // spread of where the source rays to P cross the plane y = ref.y - z
     const yPl = ref[1] - z, hits = src.map(c => { const t = (yPl - c[1]) / (P[1] - c[1]); return c[0] + t * (P[0] - c[0]); });
     return Math.abs(hits[0] - hits[1]) * .15;
@@ -589,29 +590,29 @@ VIZ.planeSweep = host => {
 
 VIZ.mvsnet = flow({
   w: 1400, h: 330, nodes: [
-    { id: "a", x: 0, y: 110, w: 180, h: 100, label: "reference +\n~$N$ source views" },
-    { id: "b", x: 230, y: 110, w: 190, h: 100, label: "shared 2D CNN\n~features", cls: "blue", step: 1 },
-    { id: "c", x: 470, y: 110, w: 220, h: 100, label: "warp onto $D$\n~depth planes", step: 2 },
-    { id: "d", x: 740, y: 110, w: 190, h: 100, label: "variance\n~→ cost volume", step: 2 },
-    { id: "e", x: 980, y: 110, w: 170, h: 100, label: "3D CNN\n~→ probabilities", cls: "blue", step: 3 },
-    { id: "f", x: 1200, y: 110, w: 190, h: 100, label: "depth map\n~+ confidence", cls: "good", step: 4 }],
+    { id: "a", x: 0, y: 100, w: 190, h: 110, label: "reference +\n~$N$ source views", size: 24 },
+    { id: "b", x: 232, y: 100, w: 196, h: 110, label: "shared 2D CNN\n~features", cls: "blue", step: 1, size: 24 },
+    { id: "c", x: 470, y: 100, w: 196, h: 110, label: "warp onto $D$\n~depth planes", step: 2, size: 24 },
+    { id: "d", x: 708, y: 100, w: 196, h: 110, label: "variance\n~→ cost volume", step: 2, size: 24 },
+    { id: "e", x: 946, y: 100, w: 196, h: 110, label: "3D CNN\n~→ probabilities", cls: "blue", step: 3, size: 24 },
+    { id: "f", x: 1184, y: 100, w: 206, h: 110, label: "depth map\n~+ confidence", cls: "good", step: 4, size: 24 }],
   edges: [{ a: "a", b: "b", step: 1 }, { a: "b", b: "c", step: 2 }, { a: "c", b: "d", step: 2 }, { a: "d", b: "e", step: 3 }, { a: "e", b: "f", step: 4 }],
-  texts: [{ x: 700, y: 290, t: "depth maps of many reference views are then filtered by confidence and fused (as in the classical pipeline)", step: 4, size: 19 }],
+  texts: [{ x: 700, y: 290, t: "depth maps of many reference views are then filtered by confidence and fused (as in the classical pipeline)", step: 4, size: 21 }],
 });
 
 VIZ.monoScale = host => {
-  const svg = V.svg(host, 1400, 440);
+  const svg = V.svg(host, 1400, 450);
   const C = [100, 330], k = 3;                       // camera on the ground; the big house is k× larger and k× farther
   cam(svg, C[0], C[1] - 22, 0, 50, "blue", "");
   const house = (p, x, s, col) => V.path(p, `M${x},${C[1]} l0,${-60 * s} l${40 * s},${-40 * s} l${40 * s},${40 * s} l0,${60 * s} z`, "", { style: `fill:var(--${col}-soft);stroke:var(--${col});stroke-width:3` });
   V.line(svg, 60, C[1] + 2, 1360, C[1] + 2, { style: "stroke:var(--muted)" });
   const A = V.g(svg), B = fadeIn(V.g(svg)), x0 = 250;
-  house(A, x0, 1, "orange"); V.text(A, x0 + 40, C[1] + 26, "toy house, 1.5 m away", { size: 19, fill: "var(--orange)", weight: 700 });
+  house(A, x0, 1, "orange"); V.text(A, x0 + 40, C[1] + 28, "toy house, 1.5 m away", { size: 22, fill: "var(--orange)", weight: 700 });
   const x1 = C[0] + (x0 - C[0]) * k;
-  house(B, x1, k, "green"); V.text(B, x1 + 120, C[1] + 26, `real house, ${k}× larger and ${k}× farther`, { size: 19, fill: "var(--green)", weight: 700 });
+  house(B, x1, k, "green"); V.text(B, x1 + 170, C[1] + 28, `real house, ${k}× larger and ${k}× farther`, { size: 22, fill: "var(--green)", weight: 700 });
   [[x0 + 40, C[1] - 100], [x0 + 80, C[1] - 60]].forEach(([x, y]) => V.line(svg, C[0], C[1], C[0] + (x - C[0]) * k * 1.12, C[1] + (y - C[1]) * k * 1.12, { style: "stroke:var(--blue)", "stroke-dasharray": "8 6" }));
-  V.text(svg, 700, 395, "same image, different scenes: a single image fixes depth only up to scale", { size: 21, weight: 700, fill: "var(--blue)" });
-  V.text(svg, 700, 428, "monocular networks learn plausible relative depth; metric scale needs a reference (SLAM points, a known size, IMU)", { size: 18, cls: "muted" });
+  V.text(svg, 700, 396, "same image, different scenes: a single image fixes depth only up to scale", { size: 23, weight: 700, fill: "var(--blue)" });
+  V.text(svg, 700, 434, "monocular networks learn plausible relative depth; metric scale needs a reference (SLAM points, a known size, IMU)", { size: 21, cls: "muted" });
   return { steps: 1, set(s) { V.show(B, s >= 1); } };
 };
 
@@ -621,13 +622,13 @@ VIZ.scaleAlign = host => {
   const pts = range(40).map(() => { const d = .2 + rnd() * .75; return [d, 2.6 * d + .4 + .12 * gauss()]; });
   const n = pts.length, mx = pts.reduce((a, p) => a + p[0], 0) / n, my = pts.reduce((a, p) => a + p[1], 0) / n;
   const s = pts.reduce((a, p) => a + (p[0] - mx) * (p[1] - my), 0) / pts.reduce((a, p) => a + (p[0] - mx) ** 2, 0), t = my - s * mx;
-  const X = d => 120 + d * 700, Y = z => 390 - z * 115;
+  const X = d => 110 + d * 640, Y = z => 390 - z * 115;
   plotAxes(svg, X, Y, 0, 1.05, 0, 3.2, "network depth (relative)", "SLAM depth [m]");
   pts.forEach(([a, b]) => V.circle(svg, X(a), Y(b), 6, { style: "fill:var(--blue)" }));
   const fit = fadeIn(V.g(svg));
   V.line(fit, X(0), Y(t), X(1), Y(s + t), { style: "stroke:var(--magenta)", "stroke-width": 4 });
-  V.text(fit, 1140, 120, `least squares on sparse\nSLAM points: $s$ = ${s.toFixed(2)}, $t$ = ${t.toFixed(2)}`, { size: 21 });
-  V.text(fit, 1140, 250, "metric depth = $s$ · network depth + $t$\nfor every pixel of the image", { size: 21, weight: 700, fill: "var(--magenta)" });
-  V.text(svg, 1140, 360, "each dot: a pixel where VSLAM\nhas a triangulated landmark", { size: 18, cls: "muted" });
+  V.text(fit, 1140, 110, `least squares on sparse\nSLAM points: $s$ = ${s.toFixed(2)}, $t$ = ${t.toFixed(2)}`, { size: 23 });
+  V.text(fit, 1140, 230, "metric depth = $s$ · network depth + $t$\nfor every pixel of the image", { size: 23, weight: 700, fill: "var(--magenta)" });
+  V.text(svg, 1150, 335, "each dot: a pixel where VSLAM\nhas a triangulated landmark", { size: 21, cls: "muted" });
   return { steps: 1, set(st) { V.show(fit, st >= 1); } };
 };

@@ -28,7 +28,7 @@ VIZ.featureMaps = host => {
   const row = host.firstChild, figs = [];
   maps.forEach(([name, data, note], k) => {
     const f = document.createElement("figure");
-    f.style.cssText = "margin:0;text-align:center;font-size:21px";
+    f.style.cssText = "margin:0;text-align:center;font-size:23px";
     f.className = k ? "fade" : "";
     const c = document.createElement("canvas"); c.width = n; c.height = n;
     c.style.cssText = "width:220px;height:220px;image-rendering:pixelated;border:1px solid var(--rule)";
@@ -41,10 +41,10 @@ VIZ.featureMaps = host => {
     ctx.putImageData(im, 0, 0);
     f.innerHTML = `<div style="font-weight:700;margin-bottom:8px">${name}</div>`;
     f.appendChild(c);
-    if (note) f.insertAdjacentHTML("beforeend", `<figcaption style="color:var(--muted);font-size:18px;margin-top:6px;max-width:220px">${note}</figcaption>`);
+    if (note) f.insertAdjacentHTML("beforeend", `<figcaption style="color:var(--muted);font-size:21px;margin-top:6px;max-width:230px">${note}</figcaption>`);
     row.appendChild(f); figs.push(f);
   });
-  host.insertAdjacentHTML("beforeend", `<p style="font-size:19px;color:var(--muted);margin:14px 0 0">bright = strong response of that channel's filter (after ReLU); computed live in the browser</p>`);
+  host.insertAdjacentHTML("beforeend", `<p style="font-size:22px;color:var(--muted);margin:14px 0 0">bright = strong response of that channel's filter (after ReLU); computed live in the browser</p>`);
   return { steps: 4, set(s) { figs.forEach((f, i) => { if (i) f.style.opacity = i <= s ? 1 : 0; }); } };
 };
 
@@ -57,7 +57,7 @@ VIZ.stack = host => {
   const eq = V.g(svg, { class: "fade" });
   V.text(eq, 590, 65, "=", { size: 40 });
   V.box(eq, 650, 30, 300, 70, "a single conv 5 × 5", "box bad");
-  V.text(eq, 1150, 65, "two linear operations collapse", { size: 20, cls: "muted" });
+  V.text(eq, 1160, 65, "two linear operations collapse", { size: 23, cls: "muted" });
   const r2 = V.g(svg, { class: "fade" });
   [[40, "conv 3 × 3", ""], [300, "ReLU", "blue"], [520, "conv 3 × 3", ""], [780, "ReLU", "blue"], [1000, "nonlinear feature", "good"]].forEach(([x, l, c], i, arr) => {
     V.box(r2, x, 200, l.length > 10 ? 250 : (c ? 150 : 190), 70, l, "box " + c);
@@ -92,13 +92,13 @@ VIZ.rfGrowth = host => {
   const svg = V.svg(host, 1400, 430), s = 38;
   const A = rfTree(svg, 30, 330, [{ K: 3, S: 1 }, { K: 3, S: 1 }, { K: 3, S: 1 }], s, { dy: 90 });
   A.cone(3, 0);
-  V.text(svg, 30 + 3.5 * s, 400, "three 3 × 3, stride 1:  RF = 7", { size: 22, weight: 700 });
+  V.text(svg, 30 + 3.5 * s, 402, "three 3 × 3, stride 1:  RF = 7", { size: 23, weight: 700 });
   const right = V.g(svg, { class: "fade" });
-  const B = rfTree(right, 540, 330, [{ K: 3, S: 2 }, { K: 3, S: 2 }, { K: 3, S: 1 }], s, { dy: 90 });
+  const B = rfTree(right, 470, 330, [{ K: 3, S: 2 }, { K: 3, S: 2 }, { K: 3, S: 1 }], s, { dy: 90 });
   B.cone(3, 0);
-  V.text(right, 540 + 7.5 * s, 400, "three 3 × 3, stride 2:  RF = 15", { size: 22, weight: 700 });
+  V.text(right, 470 + 7.5 * s, 402, "three 3 × 3, stride 2:  RF = 15", { size: 23, weight: 700 });
   const f = V.g(svg, { class: "fade" });
-  V.box(f, 1150, 60, 240, 210, "$r$_l = $r$_{l−1} + ($K$_l − 1)·$j$_{l−1}\n\n$j$_l = $j$_{l−1}·$S$_l\n\n~$j$ = step between neighbouring\n~units, in input pixels", "box blue", { size: 21 });
+  V.box(f, 1070, 40, 330, 270, "$r$_l = $r$_{l−1} + ($K$_l − 1)·$j$_{l−1}\n\n$j$_l = $j$_{l−1}·$S$_l\n\n~$j$ = step between\n~neighbouring units,\n~in input pixels", "box blue", { size: 25 });
   return { steps: 2, set(st) { V.show(right, st >= 1); V.show(f, st >= 2); } };
 };
 
@@ -108,7 +108,7 @@ VIZ.hierarchy = host => {
   const P = titles.map(([t, s], i) => {
     const g = V.g(svg, { class: "fade" }), x = i * 350;
     V.rect(g, x, 30, 290, 290, "cell", { rx: 8 });
-    V.text(g, x + 145, 12, t, { size: 22, weight: 700 }); V.text(g, x + 145, 345, s, { size: 20, cls: "muted" });
+    V.text(g, x + 145, 10, t, { size: 23, weight: 700 }); V.text(g, x + 145, 348, s, { size: 23, cls: "muted" });
     if (i < 3) V.arrow(g, x + 297, 175, x + 343, 175);
     return g;
   });
@@ -133,13 +133,14 @@ VIZ.pointwise = host => {
   V.text(svg, 175, 385, "$C$_{in} × $H$ × $W$", { size: 22 }); V.text(svg, 1245, 385, "$C$_{out} × $H$ × $W$", { size: 22 });
   const col = (x) => { const g = V.g(svg, { class: "g-anim" }); V.path(g, `M${x},140 l60,-44 l0,0`, "", {}); V.rect(g, x, 0, 34, 34, "", { style: "fill:var(--orange)" }); V.path(g, `M${x},0 l60,-44 l34,0 l-60,44 z`, "", { style: "fill:var(--orange);opacity:.7" }); V.path(g, `M${x + 34},0 l60,-44 l0,34 l-60,44 z`, "", { style: "fill:var(--orange);opacity:.5" }); return g; };
   const c1 = col(0), c2 = col(0);
-  V.box(svg, 430, 160, 170, 100, "$**x**$_{h,w}\n~$C$_{in} values");
+  V.move(c1, 32, 122); V.move(c2, 1102, 122);
+  V.box(svg, 425, 155, 180, 110, "$**x**$_{h,w}\n~$C$_{in} values", "box", { size: 25 });
   V.text(svg, 640, 210, "×", { size: 40 });
-  V.box(svg, 680, 160, 170, 100, "$**W**$\n~$C$_{out} × $C$_{in}", "box blue");
+  V.box(svg, 675, 155, 180, 110, "$**W**$\n~$C$_{out} × $C$_{in}", "box blue", { size: 25 });
   V.text(svg, 890, 210, "=", { size: 40 });
-  V.box(svg, 930, 160, 130, 100, "$**y**$_{h,w}\n~$C$_{out}", "box");
+  V.box(svg, 925, 155, 140, 110, "$**y**$_{h,w}\n~$C$_{out}", "box", { size: 25 });
   V.arrow(svg, 360, 210, 422, 210);
-  V.text(svg, 700, 330, "the same small matrix at every pixel; no neighbouring pixels are used", { size: 20, cls: "muted" });
+  V.text(svg, 700, 330, "the same small matrix at every pixel; no neighbouring pixels are used", { size: 22, cls: "muted" });
   const lp = V.loop(t => { const k = Math.floor(t / .7) % 25, r = Math.floor(k / 5), c = k % 5; V.move(c1, 20 + 12 + c * 40, 110 + 12 + r * 40); V.move(c2, 1090 + 12 + c * 40, 110 + 12 + r * 40); });
   return { start: lp.start, stop: lp.stop };
 };
@@ -151,7 +152,7 @@ VIZ.pooling = host => {
   V.text(svg, 156, 22, "input 4 × 4", { size: 22, weight: 700 });
   for (let b = 0; b < 4; b++) V.rect(svg, (b % 2) * 2 * s, 45 + Math.floor(b / 2) * 2 * s, 2 * s, 2 * s, "", { style: `fill:var(--${cols[b]}-soft)` });
   X.forEach((r, i) => r.forEach((v, j) => { V.rect(svg, j * s, 45 + i * s, s, s, "", { style: "fill:none;stroke:var(--rule);stroke-width:1.5" }); V.text(svg, j * s + s / 2, 45 + i * s + s / 2, v, { size: 28 }); }));
-  const win = V.g(svg, { class: "g-anim" }); V.rect(win, 0, 0, 2 * s, 2 * s, "win");
+  const win = V.g(svg, { class: "g-anim" }); V.rect(win, 0, 0, 2 * s, 2 * s, "win"); V.move(win, 0, 45);
   const outs = [["max pool", 620, 30, (a) => Math.max(...a)], ["average pool", 620, 225, a => a.reduce((x, y) => x + y) / 4]].map(([n, x, y, f]) => {
     V.text(svg, x + 280, y + s / 2 + 20, n, { size: 24, weight: 700, anchor: "start" });
     return range(4).map(b => {
@@ -162,7 +163,7 @@ VIZ.pooling = host => {
     });
   });
   V.arrow(svg, 340, 130, 600, 90); V.arrow(svg, 340, 250, 600, 290);
-  V.text(svg, 1250, 200, "no learnable weights\neach channel separately\n$H$ × $W$ → $H$/2 × $W$/2", { size: 20, cls: "muted" });
+  V.text(svg, 1265, 200, "no learnable weights\neach channel separately\n$H$ × $W$ → $H$/2 × $W$/2", { size: 22, cls: "muted" });
   let last = -1;
   const show = k => {
     V.move(win, (k % 2) * 2 * s, 45 + Math.floor(Math.min(k, 3) / 2) * 2 * s); win.style.opacity = k < 4 ? 1 : 0;
@@ -174,12 +175,12 @@ VIZ.pooling = host => {
 
 VIZ.poolVsStride = flow({
   w: 1400, h: 260, nodes: [
-    { id: "x", x: 0, y: 85, w: 200, h: 90, label: "input\n$H$ × $W$" },
-    { id: "p", x: 330, y: 10, w: 320, h: 90, label: "pooling 2 × 2\n~fixed max / mean" },
-    { id: "c", x: 330, y: 160, w: 320, h: 90, label: "strided conv, $S$ = 2\n~learned kernel", cls: "blue" },
-    { id: "y", x: 790, y: 85, w: 240, h: 90, label: "output\n$H$/2 × $W$/2" }],
+    { id: "x", x: 0, y: 80, w: 200, h: 100, label: "input\n$H$ × $W$", size: 25 },
+    { id: "p", x: 330, y: 0, w: 320, h: 100, label: "pooling 2 × 2\n~fixed max / mean", size: 25 },
+    { id: "c", x: 330, y: 160, w: 320, h: 100, label: "strided conv, $S$ = 2\n~learned kernel", cls: "blue", size: 25 },
+    { id: "y", x: 790, y: 80, w: 240, h: 100, label: "output\n$H$/2 × $W$/2", size: 25 }],
   edges: [{ a: "x", b: "p" }, { a: "x", b: "c" }, { a: "p", b: "y" }, { a: "c", b: "y" }],
-  texts: [{ x: 1210, y: 130, t: "same shape,\ndifferent cost\nand information" }],
+  texts: [{ x: 1210, y: 130, t: "same shape,\ndifferent cost\nand information", size: 24 }],
 });
 
 VIZ.gap = host => {
@@ -188,7 +189,7 @@ VIZ.gap = host => {
   const means = maps.map(m => m.flat().reduce((a, b) => a + b) / 16);
   maps.forEach((m, k) => {
     m.forEach((r, i) => r.forEach((v, j) => V.rect(svg, 50 + k * 260 + j * 40, 60 + i * 40, 40, 40, "", { fill: `rgba(0,112,186,${v})`, stroke: "#fff", "stroke-width": 2 })));
-    V.text(svg, 130 + k * 260, 35, `channel ${k + 1}`, { size: 20, weight: 700 });
+    V.text(svg, 130 + k * 260, 33, `channel ${k + 1}`, { size: 23, weight: 700 });
   });
   // a translucent copy of each map shrinks into its mean
   const groups = maps.map((m, k) => {
@@ -199,8 +200,8 @@ VIZ.gap = host => {
   const vals = means.map((m, k) => { const t = V.box(svg, 85 + k * 260, 290, 90, 60, m.toFixed(2), "box", { size: 24 }); t.classList.add("fade"); return t; });
   const res = V.g(svg, { class: "fade" });
   V.text(res, 880, 320, "=", { size: 40 });
-  V.box(res, 940, 280, 380, 80, "vector of length $C$\n~no position information", "box blue");
-  V.text(svg, 1110, 140, "mean over $H$ × $W$,\nseparately for each channel", { size: 21, cls: "muted" });
+  V.box(res, 940, 270, 400, 100, "vector of length $C$\n~no position information", "box blue", { size: 25 });
+  V.text(svg, 1130, 140, "mean over $H$ × $W$,\nseparately for each channel", { size: 23, cls: "muted" });
   return {
     steps: 1, set(s) {
       groups.forEach(g => {
@@ -219,13 +220,13 @@ VIZ.normalize = host => {
   const mx = pts.reduce((a, p) => a + p[0], 0) / 8, my = pts.reduce((a, p) => a + p[1], 0) / 8;
   const sx = Math.sqrt(pts.reduce((a, p) => a + (p[0] - mx) ** 2, 0) / 8), sy = Math.sqrt(pts.reduce((a, p) => a + (p[1] - my) ** 2, 0) / 8);
   V.path(svg, `M${X(0)},${Y(0)} L${X(270)},${Y(0)} M${X(0)},${Y(0)} L${X(0)},${Y(260)}`, "axis");
-  V.text(svg, X(135), 365, "pixel values 0–255", { size: 20, cls: "muted" });
+  V.text(svg, X(135), 365, "pixel values 0–255", { size: 22, cls: "muted" });
   const cx = 880, cy = 190, k = 90;
   const ax = V.g(svg, { class: "fade" });
   V.path(ax, `M${cx - 230},${cy} L${cx + 230},${cy} M${cx},${cy + 170} L${cx},${cy - 170}`, "axis");
-  V.text(ax, cx + 150, 365, "zero mean, unit scale", { size: 20, cls: "muted" });
+  V.text(ax, cx + 150, 365, "zero mean, unit scale", { size: 22, cls: "muted" });
   const dots = pts.map(p => { const c = V.circle(svg, 0, 0, 9, { fill: "var(--blue)" }); c.classList.add("g-anim"); c._p = p; return c; });
-  const f = V.box(svg, 1140, 130, 260, 110,"$x̂$_c = ($x$_c − $μ$_c) / $σ$_c\n~per channel $c$", "box blue"); f.classList.add("fade");
+  const f = V.box(svg, 1120, 125, 280, 120, "$x̂$_c = ($x$_c − $μ$_c) / $σ$_c\n~per channel $c$", "box blue", { size: 25 }); f.classList.add("fade");
   return {
     steps: 1, set(s) {
       dots.forEach((d, i) => { const [x, y] = d._p; V.move(d, s ? cx + (x - mx) / sx * k : X(x), s ? cy - (y - my) / sy * k : Y(y)); d.style.transitionDelay = `${i * 0.05}s`; });
@@ -246,7 +247,7 @@ VIZ.batchnorm = flow({
 });
 
 VIZ.minimalCNN = host => {
-  const svg = V.svg(host, 1400, 420);
+  const svg = V.svg(host, 1400, 440);
   // Channels run along the horizontal axis (length), spatial size is the height;
   // the oblique edge shows the second spatial axis.
   const L = [
@@ -256,15 +257,16 @@ VIZ.minimalCNN = host => {
     [800, 165, 64, "blue", "conv 3", "128 × 16 × 16"]];
   const G = L.map(([x, len, h, c, n, sh]) => {
     const g = cuboid(svg, x, 230 - h / 2 + h * .12, len, h, h * .55, c);
-    V.text(svg, x + len / 2 + h * .15, 365, n, { size: 21, weight: 700 }); V.text(svg, x + len / 2 + h * .15, 393, sh, { size: 19, cls: "muted" });
+    V.text(svg, x + len / 2 + h * .15, 392, n, { size: 23, weight: 700 }); V.text(svg, x + len / 2 + h * .15, 422, sh, { size: 22, cls: "muted" });
     g.style.transition = "opacity .3s"; return g;
   });
   const gap = V.g(svg); V.rect(gap, 1135, 90, 26, 240, "", { style: "fill:var(--orange-soft);stroke:var(--orange);stroke-width:2" });
-  V.text(svg, 1148, 365, "GAP", { size: 21, weight: 700 }); V.text(svg, 1148, 393, "128", { size: 19, cls: "muted" });
+  V.text(svg, 1148, 392, "GAP", { size: 23, weight: 700 }); V.text(svg, 1148, 422, "128", { size: 22, cls: "muted" });
   const lin = V.g(svg); V.rect(lin, 1290, 160, 26, 100, "", { style: "fill:var(--green-soft);stroke:var(--green);stroke-width:2" });
-  V.text(svg, 1303, 365, "linear", { size: 21, weight: 700 }); V.text(svg, 1303, 393, "10 logits", { size: 19, cls: "muted" });
+  V.text(svg, 1303, 392, "linear", { size: 23, weight: 700 }); V.text(svg, 1303, 422, "10 logits", { size: 22, cls: "muted" });
   [[200, 292], [460, 532], [700, 792], [1015, 1125], [1170, 1280]].forEach(([a, b]) => V.arrow(svg, a, 210, b, 210));
-  V.text(svg, 700, 22, "each conv block: 3 × 3 conv, stride 2, padding 1 → BatchNorm → ReLU", { size: 21, cls: "muted" });
+  V.text(svg, 700, 22, "each conv block: 3 × 3 conv, stride 2, padding 1 → BatchNorm → ReLU", { size: 23, cls: "muted" });
+
   const all = [...G, gap, lin];
   const lp = V.loop(t => { const k = Math.floor(t / .8) % (all.length + 2); all.forEach((g, i) => g.style.opacity = k >= all.length ? 1 : (i === k ? 1 : .35)); });
   return { start: lp.start, stop() { lp.stop(); all.forEach(g => g.style.opacity = 1); } };

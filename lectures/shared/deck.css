@@ -112,7 +112,7 @@ svg .muted{fill:var(--muted)}
 .ctrls label{display:flex;align-items:center;gap:10px}
 .ctrls input[type=range]{width:170px;accent-color:var(--blue)}
 .ctrls output{font:700 21px var(--mono);min-width:44px;display:inline-block}
-.btn{border:1.5px solid var(--blue);background:#fff;color:var(--blue);font:600 18px var(--sans);padding:7px 16px;cursor:pointer;border-radius:4px}
+.btn{border:1.5px solid var(--blue);background:#fff;color:var(--blue);font:600 20px var(--sans);padding:7px 16px;cursor:pointer;border-radius:4px}
 .btn:hover{background:var(--blue-soft)}
 table.t{border-collapse:collapse;font-size:23px;margin:0 auto}
 table.t th{text-align:left;border-bottom:2px solid var(--ink);padding:6px 18px}
